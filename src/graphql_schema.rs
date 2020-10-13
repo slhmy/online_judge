@@ -21,14 +21,14 @@ use juniper::http::GraphQLRequest;
 use std::sync::Arc;
 use schema::*;
 
-async fn graphiql() -> HttpResponse {
+pub async fn graphiql() -> HttpResponse {
     let html = graphiql_source("http://127.0.0.1:8080/graphql");
     HttpResponse::Ok()
         .content_type("text/html; charset=utf-8")
         .body(html)
 }
 
-async fn graphql(
+pub async fn graphql(
     st: web::Data<Arc<Schema>>,
     data: web::Json<GraphQLRequest>,
 ) -> Result<HttpResponse, Error> {
@@ -44,10 +44,7 @@ async fn graphql(
 
 pub fn graphql_config(cfg: &mut web::ServiceConfig) {
     cfg.service(
-        web::scope("").wrap(
-            CookieSession::signed(&[0; 32]) // <- create cookie based session middleware
-                .secure(false),
-        )
+        web::scope("")
             .service(web::resource("/graphql")
                 .route(web::post().to(graphql)))
             .service(web::resource("/graphiql")

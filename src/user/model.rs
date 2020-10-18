@@ -78,3 +78,30 @@ impl Handler<UserId> for DbExecutor {
         }
     }
 }
+
+pub struct AllUsers();
+
+impl Message for AllUsers {
+    type Result = Result<Vec<OutUser>, String>;
+}
+
+impl Handler<AllUsers> for DbExecutor {
+    type Result = Result<Vec<OutUser>, String>;
+
+    fn handle(&mut self, _msg: AllUsers, _: &mut Self::Context) -> Self::Result {
+        use crate::schema::users::dsl::*;
+
+        let operation_result = users.load::<User>(&self.0);
+
+        match operation_result {
+            Err(system_msg) => Err(format!("Database operate failed.\nSystem_msg: {}", system_msg)),
+            Ok(users_result) => {
+                let mut out_users = Vec::new();
+                for user in users_result {
+                    out_users.push(OutUser::from(user));
+                }
+                Ok(out_users)
+            },
+        }
+    }
+}

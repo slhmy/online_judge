@@ -197,3 +197,36 @@ pub async fn delete_user(
         Ok(_res) => { HttpResponse::Ok().body("Delete user successfully.") }
     }
 }
+
+pub async fn get_all_users(
+    data: web::Data<State>,
+    id: Identity,
+) -> HttpResponse {
+    let res;
+    if let Some(user_id) = id.identity() {
+        let get_user_res = data.db.send(UserId(user_id.parse::<i32>().unwrap())).await;
+        let user;
+        match get_user_res {
+            Err(_) => {return HttpResponse::InternalServerError().body("Unexpected Database error."); },
+            Ok(inner_res) => { 
+                match inner_res {
+                    Err(msg) => { return HttpResponse::BadRequest().body(format!("Get User information failed.\n{}.", msg)); },
+                    Ok(inner_user) => { user = inner_user; },
+                }
+            },
+        }
+
+        if user.role == "admin".to_owned() {
+            res = data.db.send(AllUsers()).await;
+        } else {
+            return HttpResponse::BadRequest().body("You are not allowed to get all users.");
+        }
+    } else {
+        return HttpResponse::BadRequest().body("You are not logined now.");   
+    }
+    
+    match res {
+        Err(msg) => { HttpResponse::BadRequest().body(format!("Get all users failed.\n{}.", msg)) }
+        Ok(res) => { HttpResponse::Ok().json(res) }
+    }
+}

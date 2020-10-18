@@ -15,7 +15,6 @@ pub mod schema {
 }
 
 use actix_web::*;
-use actix_session::*;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
 use std::sync::Arc;
@@ -42,12 +41,7 @@ pub async fn graphql(
         .body(user))
 }
 
-pub fn graphql_config(cfg: &mut web::ServiceConfig) {
-    cfg.service(
-        web::scope("")
-            .service(web::resource("/graphql")
-                .route(web::post().to(graphql)))
-            .service(web::resource("/graphiql")
-                .route(web::get().to(graphiql)))
-    );
+pub(super) fn route(cfg: &mut web::ServiceConfig) {
+    cfg.service(web::resource("/graphql").route(web::post().to(graphql)))
+        .service(web::resource("/graphiql").route(web::get().to(graphiql)));
 }

@@ -1,54 +1,75 @@
-use std::io;
-
-use actix_web::client::Client;
-use actix_web::{middleware, web, App, HttpResponse, HttpServer, Responder};
-
-use online_judge::graphql_schema::*;
-
+mod schema;
+mod service;
+mod database;
+mod user;
+mod graphql;
+mod judge_server;
+mod utils;
 mod encryption;
-use encryption::encode;
 
-async fn handle_heartbeat() -> impl Responder {
-    println!("recieved judge_server heartbeat");
-    HttpResponse::Ok()
-}
+#[macro_use] extern crate log;
+#[macro_use] extern crate diesel;
+#[macro_use] extern crate lazy_static;
+#[macro_use] extern crate serde_derive;
 
-async fn ping_judge_server() -> impl Responder {
-    let token = encode::sha256_token("YOUR_TOKEN_HERE");
-   
-    let response = Client::new()
-        .post("http://127.0.0.1:12358/ping")
-        .set_header("X-Judge-Server-Token", token)
-        .set_header("Content-Type", "application/json")
-        .send()
-        .await;
-    println!("Response: {:?}", response);
-    HttpResponse::Ok().body("ping sended")
+extern crate regex;
+extern crate dotenv;
+extern crate env_logger;
+extern crate serde_json;
+extern crate pretty_env_logger;
+
+use std::io;
+use regex::Regex;
+use time::Duration;
+use actix_web::{ 
+    App,
+    middleware, 
+    HttpServer, 
+};
+use actix_identity::{
+    CookieIdentityPolicy, 
+    IdentityService,
+};
+use crate::{
+    graphql::schema as graphql_schema,
+    database::*,
+};
+
+lazy_static! {    
+    static ref RE_EMAIL: Regex = Regex::new(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$").unwrap();
+    static ref RE_MOBILE: Regex = Regex::new(r"^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,5-9]))\d{8}$").unwrap();
+    static ref RE_PASSWORD: Regex = Regex::new(r"^\S{6,20}$").unwrap();
 }
 
 #[actix_rt::main]
 async fn main() -> io::Result<()> {
-    let docker_port = "172.17.0.1:8080";
-    std::env::set_var("RUST_LOG", "actix_web=info");
+    std::env::set_var("RUST_LOG", "info, actix_web=info");
     env_logger::init();
 
+    // Create schema
+    let addr = create_db_executor();
+
     // Create Juniper schema
-    let schema = std::sync::Arc::new(schema::create_schema());
+    let graphql_schema = std::sync::Arc::new(graphql_schema::create_schema());
 
     // Start http server
     HttpServer::new(move || {
         App::new()
-            .data(schema.clone())
+            .data(State { db: addr.clone() })
+            .data(graphql_schema.clone())
             .wrap(middleware::Logger::default())
-            .service(web::resource("/graphql")
-                .route(web::post().to(graphql)))
-            .service(web::resource("/graphiql")
-                .route(web::get().to(graphiql)))
-            .service(web::resource("/judge_server/heartbeat").route(web::post().to(handle_heartbeat)))
-            .service(web::resource("/api/ping_judge_server").route(web::post().to(ping_judge_server)))
+            .wrap(IdentityService::new(
+                // <- create identity middleware
+                CookieIdentityPolicy::new(&[0; 32])    // <- create cookie identity policy
+                      .name("auth-cookie")
+                      .max_age(60)
+                      .visit_deadline(Duration::minutes(30))
+                      .secure(false)))
+            .configure(graphql::route)
+            .configure(user::route)
+            .configure(judge_server::route)
     })
-    .bind("127.0.0.1:8080")?
-    .bind(docker_port)?
+    .bind("0.0.0.0:8080")?
     .run()
     .await
 }

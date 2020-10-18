@@ -1,9 +1,9 @@
-use crate::graphql_schema::objects::{
+use crate::graphql::objects::{
     problem::*,
     user::*,
 };
 
-pub fn get_problem_by_id(id: i32) -> Problem {
+pub fn get_problem_by_id(_id: i32) -> Problem {
     Problem {
         id: 1,
         content: ProblemContent {

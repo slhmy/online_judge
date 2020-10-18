@@ -1,8 +1,8 @@
-use crate::graphql_schema::objects::{
+use crate::graphql::objects::{
     user::*,
 };
 
-pub fn get_user_by_token(token: &str) -> User {
+pub fn get_user_by_token(_token: &str) -> User {
     User {
         token: "MY_TOKEN".to_owned(),
         username: "slhmy".to_owned(),

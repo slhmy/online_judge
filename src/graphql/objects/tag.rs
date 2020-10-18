@@ -1,5 +1,5 @@
 use juniper::GraphQLObject;
-use crate::graphql_schema::objects::problem::*;
+use crate::graphql::objects::problem::*;
 
 #[derive(GraphQLObject)]
 pub struct Tag {

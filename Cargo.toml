@@ -1,6 +1,6 @@
 [package]
 name = "online_judge"
-version = "0.1.0"
+version = "0.1.1"
 authors = ["slhmy <1484836413@qq.com>"]
 edition = "2018"
 

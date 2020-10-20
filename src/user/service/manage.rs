@@ -16,6 +16,7 @@ use crate::schema::users;
 #[derive(Debug, Clone, Deserialize, AsChangeset)]
 #[table_name="users"]
 pub struct UserChange {
+    pub username: Option<String>,
     pub hash: Option<Vec<u8>>,
     pub email: Option<String>,
     pub mobile: Option<String>,
@@ -24,6 +25,9 @@ pub struct UserChange {
 }
 
 fn get_user_change(req: UserChangeRequest, user: User) -> UserChange {
+    let username = if req.username.is_none() { None }
+    else { Some(req.username.unwrap()) };
+
     let hash = if req.password.is_none() { None }
     else {
         if req.password.clone().unwrap().is_password() { Some(make_hash(&req.password.unwrap(), &user.salt).to_vec()) }
@@ -49,6 +53,7 @@ fn get_user_change(req: UserChangeRequest, user: User) -> UserChange {
     else { Some(req.job_number.unwrap()) };
 
     UserChange {
+        username: username,
         hash: hash,
         email: email,
         mobile: mobile,
@@ -67,21 +72,30 @@ impl Handler<UserChangeRequest> for DbExecutor {
     fn handle(&mut self, msg: UserChangeRequest, _: &mut Self::Context) -> Self::Result {
         use crate::schema::users::dsl::*;
 
-        let operation_result = users.filter(id.eq(msg.id)).limit(1).load::<User>(&self.0).expect("Error loading user").pop();
-
-        if !operation_result.is_none() {
-            let user = operation_result.unwrap();
-            let msg_id = msg.id;
-            let user_change = get_user_change(msg, user);
-            let inner_result = diesel::update(users.filter(id.eq(msg_id)))
-                .set(user_change)
-                .get_result::<User>(&self.0);
-            match inner_result {
-                Err(system_msg) => Err(format!("Database operate failed.\nSystem_msg: {}", system_msg)),
-                Ok(user) => Ok(OutUser::from(user)),
-            }
-        } else {
-            Err("Database operate failed.\nReason: can't find account.".to_owned())
+        let operation_result = users.filter(id.eq(msg.id)).first::<User>(&self.0);
+        
+        match operation_result {
+            Ok(result) => {
+                let user = result;
+                let msg_id = msg.id;
+                let user_change = get_user_change(msg, user);
+                let affected_rows = diesel::update(users.filter(id.eq(msg_id)))
+                    .set(user_change)
+                    .execute(&self.0).unwrap_or(0);
+                let inner_result;
+                if affected_rows == 1 {
+                    inner_result = users.find(msg_id).first::<User>(&self.0);
+                } else {
+                    return Err(format!("Database operate failed.\nReason: conflict identity_info"));
+                }
+                match inner_result {
+                    Err(system_msg) => Err(format!("Database operate failed.\nSystem_msg: {}", system_msg)),
+                    Ok(user) => Ok(OutUser::from(user)),
+                }
+            },
+            Err(msg) => {
+                Err(format!("Database operate failed.\nSystem_msg: {}", msg))
+            },
         }
     }
 }
@@ -96,18 +110,21 @@ impl Handler<UserDeleteRequest> for DbExecutor {
     fn handle(&mut self, msg: UserDeleteRequest, _: &mut Self::Context) -> Self::Result {
         use crate::schema::users::dsl::*;
 
-        let operation_result = users.filter(id.eq(msg.id)).limit(1).load::<User>(&self.0).expect("Error loading user").pop();
+        let operation_result = users.filter(id.eq(msg.id)).first::<User>(&self.0);
 
-        if !operation_result.is_none() {
-            let user = operation_result.unwrap();
-            let inner_result = diesel::delete(users.filter(id.eq(msg.id)))
-                .execute(&self.0);
-            match inner_result {
-                Err(system_msg) => Err(format!("Database operate failed.\nSystem_msg: {}", system_msg)),
-                Ok(_) => Ok(OutUser::from(user)),
-            }
-        } else {
-            Err("Database operate failed.\nReason: can't find account.".to_owned())
+        match operation_result {
+            Ok(result) => {
+                let user = result;
+                let inner_result = diesel::delete(users.filter(id.eq(msg.id)))
+                    .execute(&self.0);
+                match inner_result {
+                    Err(system_msg) => Err(format!("Database operate failed.\nSystem_msg: {}", system_msg)),
+                    Ok(_) => Ok(OutUser::from(user)),
+                }
+            },
+            Err(msg) => {
+                Err(format!("Database operate failed.\nSystem_msg: {}", msg))
+            },
         }
     }
 }
@@ -115,6 +132,7 @@ impl Handler<UserDeleteRequest> for DbExecutor {
 #[derive(Debug, Clone, Deserialize)]
 pub struct UserChangeRequest {
     pub id: i32,
+    pub username: Option<String>,
     pub password: Option<String>,
     pub email: Option<String>,
     pub mobile: Option<String>,
@@ -133,7 +151,7 @@ pub async fn change_info(
             .send(UserId(user_id.parse::<i32>().unwrap())).await;
         let user;
         match get_user_res {
-            Err(_) => {return HttpResponse::InternalServerError().body("Unexpected Database error."); },
+            Err(_) => { return HttpResponse::InternalServerError().body("Unexpected Database error."); },
             Ok(inner_res) => { 
                 match inner_res {
                     Err(msg) => { return HttpResponse::BadRequest().body(format!("Get User information failed.\n{}.", msg)); },
@@ -150,10 +168,15 @@ pub async fn change_info(
     } else {
         return HttpResponse::BadRequest().body("You are not logined now.");   
     }
-    
+
     match res {
-        Err(msg) => { HttpResponse::BadRequest().body(format!("Change information failed.\n{}.", msg)) }
-        Ok(_res) => { HttpResponse::Ok().body("Change information successfully.") }
+        Err(_) => HttpResponse::InternalServerError().body("Unexpected Database error."),
+        Ok(handler_result) => { 
+            match handler_result {
+                Err(msg) => HttpResponse::BadRequest().body(format!("Change information failed.\n{}.", msg)),
+                Ok(_) => HttpResponse::Ok().body("Change information successfully."),
+            }
+        }
     }
 }
 
@@ -173,7 +196,7 @@ pub async fn delete_user(
             .send(UserId(user_id.parse::<i32>().unwrap())).await;
         let user;
         match get_user_res {
-            Err(_) => {return HttpResponse::InternalServerError().body("Unexpected Database error."); },
+            Err(_) => { return HttpResponse::InternalServerError().body("Unexpected Database error."); },
             Ok(inner_res) => { 
                 match inner_res {
                     Err(msg) => { return HttpResponse::BadRequest().body(format!("Get User information failed.\n{}.", msg)); },
@@ -193,8 +216,13 @@ pub async fn delete_user(
     }
     
     match res {
-        Err(msg) => { HttpResponse::BadRequest().body(format!("Delete user failed.\n{}.", msg)) }
-        Ok(_res) => { HttpResponse::Ok().body("Delete user successfully.") }
+        Err(_) => HttpResponse::InternalServerError().body("Unexpected Database error."),
+        Ok(handler_result) => { 
+            match handler_result {
+                Err(msg) => HttpResponse::BadRequest().body(format!("Delete user failed.\n{}.", msg)),
+                Ok(_res) => HttpResponse::Ok().body("Delete user successfully."),
+            }
+        }
     }
 }
 
@@ -226,7 +254,12 @@ pub async fn get_all_users(
     }
     
     match res {
-        Err(msg) => { HttpResponse::BadRequest().body(format!("Get all users failed.\n{}.", msg)) }
-        Ok(res) => { HttpResponse::Ok().json(res) }
+        Err(_) => HttpResponse::InternalServerError().body("Unexpected Database error."),
+        Ok(handler_result) => { 
+            match handler_result {
+                Err(msg) => HttpResponse::BadRequest().body(format!("Get all users failed.\n{}.", msg)),
+                Ok(all_users) => HttpResponse::Ok().json(all_users),
+            }
+        }
     }
 }

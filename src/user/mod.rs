@@ -17,7 +17,7 @@ pub fn route(cfg: &mut web::ServiceConfig) {
             .service(web::resource("/logout").route(web::get().to(logout)))
             .service(
                 web::scope("/manage")
-                    .service(web::resource("/get_all_users").route(web::post().to(get_all_users)))
+                    .service(web::resource("/get_all_users").route(web::get().to(get_all_users)))
                     .service(web::resource("/change_info").route(web::post().to(change_info))) 
                     .service(web::resource("/delete_user").route(web::post().to(delete_user)))
             )

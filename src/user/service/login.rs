@@ -83,6 +83,6 @@ pub async fn logout(
         id.forget();
         HttpResponse::Ok().body("logout successfully.")
     } else {
-        HttpResponse::BadRequest().body("You are not online now.")
+        HttpResponse::Ok().body("You are not online now.")
     }
 }

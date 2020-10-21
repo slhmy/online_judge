@@ -95,6 +95,18 @@ dependencies = [
 ]
 
 [[package]]
+name = "actix-cors"
+version = "0.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3e5c769e4d332bfad27f11b8139b5818c4bbddb02c385b8f16344d93ff1a8eb"
+dependencies = [
+ "actix-service",
+ "actix-web",
+ "derive_more",
+ "futures-util",
+]
+
+[[package]]
 name = "actix-http"
 version = "1.0.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1520,6 +1532,7 @@ name = "online_judge"
 version = "0.1.1"
 dependencies = [
  "actix",
+ "actix-cors",
  "actix-identity",
  "actix-rt",
  "actix-web",

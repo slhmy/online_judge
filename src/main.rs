@@ -30,6 +30,7 @@ use actix_identity::{
     CookieIdentityPolicy, 
     IdentityService,
 };
+use actix_cors::Cors;
 use crate::{
     graphql::schema as graphql_schema,
     database::*,
@@ -41,7 +42,7 @@ lazy_static! {
     static ref RE_PASSWORD: Regex = Regex::new(r"^\S{6,20}$").unwrap();
 }
 
-#[actix_rt::main]
+#[actix_web::main]
 async fn main() -> io::Result<()> {
     std::env::set_var("RUST_LOG", "info, actix_web=info");
     env_logger::init();
@@ -57,6 +58,11 @@ async fn main() -> io::Result<()> {
         App::new()
             .data(State { db: addr.clone() })
             .data(graphql_schema.clone())
+            .wrap(
+                Cors::new() // <- Construct CORS middleware builder
+                    .supports_credentials()
+                    .finish()
+                )
             .wrap(middleware::Logger::default())
             .wrap(IdentityService::new(
                 // <- create identity middleware

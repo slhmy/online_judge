@@ -79,6 +79,29 @@ impl Handler<UserId> for DbExecutor {
     }
 }
 
+pub struct UserMobile(pub String);
+
+impl Message for UserMobile {
+    type Result = Result<OutUser, String>;
+}
+
+impl Handler<UserMobile> for DbExecutor {
+    type Result = Result<OutUser, String>;
+
+    fn handle(&mut self, msg: UserMobile, _: &mut Self::Context) -> Self::Result {
+        use crate::schema::users::dsl::*;
+
+        let operation_result: Result<User, _>  = users
+            .filter(mobile.eq(msg.0))
+            .first(&self.0);
+
+        match operation_result {
+            Err(system_msg) => Err(format!("Database operate failed.\nSystem_msg: {}", system_msg)),
+            Ok(user) => Ok(OutUser::from(user)),
+        }
+    }
+}
+
 pub struct AllUsers();
 
 impl Message for AllUsers {

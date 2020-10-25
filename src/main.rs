@@ -18,7 +18,12 @@ extern crate env_logger;
 extern crate serde_json;
 extern crate pretty_env_logger;
 
-use std::io;
+use std::{
+    io,
+    sync::RwLock,
+    collections::BTreeMap,
+    time::SystemTime,
+};
 use regex::Regex;
 use time::Duration;
 use actix_web::{ 
@@ -37,6 +42,7 @@ use crate::{
 };
 
 lazy_static! {    
+    static ref VERIFICATION_MAP: RwLock<BTreeMap<String, (String, SystemTime)>> = RwLock::new(BTreeMap::new());
     static ref RE_EMAIL: Regex = Regex::new(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$").unwrap();
     static ref RE_MOBILE: Regex = Regex::new(r"^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,5-9]))\d{8}$").unwrap();
     static ref RE_PASSWORD: Regex = Regex::new(r"^\S{6,20}$").unwrap();

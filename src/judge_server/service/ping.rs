@@ -14,6 +14,6 @@ pub async fn ping_judge_server() -> impl Responder {
         .set_header("Content-Type", "application/json")
         .send()
         .await;
-    println!("Response: {:?}", response);
+    info!("Response: {:?}", response);
     HttpResponse::Ok().body("ping sended")
 }

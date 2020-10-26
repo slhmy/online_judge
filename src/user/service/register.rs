@@ -9,6 +9,7 @@ use crate::{
     utils::{
         role_filter::customize_role,
         regex_matcher::RegexMatcher,
+        operation_result::OperationResult,
     }
 };
 use diesel::prelude::*;
@@ -76,13 +77,25 @@ pub async fn register(
 ) -> impl Responder {
 
     if form.username.is_email() || form.username.is_mobile() {
-        let msg = "Reason: username can't be a email/mobile.";
-        return HttpResponse::BadRequest().body(format!("Register failed.\n{}.", msg));
+        let msg = "Username can't be a email/mobile.";
+        return HttpResponse::BadRequest().json(
+            OperationResult {
+                result_en: Some("rejected".to_owned()),
+                msg_en: Some(format!("Register failed.\n{}.", msg)),
+                result_cn: None,
+                msg_cn: None,
+            });
     }
 
     if !form.password.is_password() {
-        let msg = "Reason: password should be in length of 6-20";
-        return HttpResponse::BadRequest().body(format!("Register failed.\n{}.", msg));
+        let msg = "Password should be in length of 6-20";
+        return HttpResponse::BadRequest().json(
+            OperationResult {
+                result_en: Some("rejected".to_owned()),
+                msg_en: Some(format!("Register failed.\n{}.", msg)),
+                result_cn: None,
+                msg_cn: None,
+            });
     }
     
     let res = data.db
@@ -90,11 +103,29 @@ pub async fn register(
         .await;
     
     match res {
-        Err(_) => HttpResponse::InternalServerError().body("Unexpected Database error."),
+        Err(_) => HttpResponse::InternalServerError().json(
+            OperationResult {
+                result_en: Some("unexpected error".to_owned()),
+                msg_en: Some("Something went wrong in database".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            }),
         Ok(handler_result) => { 
             match handler_result {
-                Err(msg) => HttpResponse::BadRequest().body(format!("Register failed.\n{}.", msg)),
-                Ok(_) => HttpResponse::Ok().body("Successfully registered.")
+                Err(msg) => HttpResponse::BadRequest().json(
+                    OperationResult {
+                        result_en: Some("error".to_owned()),
+                        msg_en: Some(msg),
+                        result_cn: None,
+                        msg_cn: None,
+                    }),
+                Ok(_) => HttpResponse::Ok().json(
+                    OperationResult {
+                        result_en: Some("success".to_owned()),
+                        msg_en: Some("Successfully registered.".to_owned()),
+                        result_cn: None,
+                        msg_cn: None,
+                    }),
             }
         }
     }

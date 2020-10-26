@@ -45,7 +45,7 @@ impl Handler<LoginMessage> for DbExecutor {
             } else {
                 users.filter(username.eq(msg.identity_info)).limit(1).load::<User>(&self.0)
             }
-            .expect("Error loading user")
+            .expect("Error loading user.")
             .pop();
 
         if !operation_result.is_none() {
@@ -57,7 +57,7 @@ impl Handler<LoginMessage> for DbExecutor {
                 Err("Wrong password.".to_owned()) 
             }
         } else {
-            Err("Database operate failed.\nReason: can't find your account.".to_owned())
+            Err("Can't find your Account.".to_owned())
         }
     }
 }
@@ -73,14 +73,32 @@ pub async fn login(
         .await;
     
     match res {
-        Err(_) => HttpResponse::InternalServerError().body("Unexpected Database error."),
+        Err(_) => HttpResponse::InternalServerError().json(
+            OperationResult {
+                result_en: Some("unexpected error".to_owned()),
+                msg_en: Some("Something went wrong in database".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            }),
         Ok(handler_result) => {
             match handler_result {
-                Err(msg) => HttpResponse::BadRequest().body(format!("Login failed.\n{}.", msg)),
+                Err(msg) => HttpResponse::BadRequest().json(
+                    OperationResult {
+                        result_en: Some("rejected".to_owned()),
+                        msg_en: Some(msg),
+                        result_cn: None,
+                        msg_cn: None,
+                    }),
                 Ok(user) => {
                     let user_id = user.id.to_string();
                     id.remember(user_id.clone());
-                    HttpResponse::Ok().body(format!("Welcome {}.", user.username))
+                    HttpResponse::Ok().json(
+                        OperationResult {
+                            result_en: Some("success".to_owned()),
+                            msg_en: Some(format!("Welcome {}.", user.username)),
+                            result_cn: None,
+                            msg_cn: None,
+                        })
                 }
             }
         }
@@ -109,15 +127,33 @@ pub async fn get_verification_code(
                     let mut lock = VERIFICATION_MAP.write().unwrap();
                     lock.insert(form.mobile.clone(), (code, SystemTime::now()));
                     info!{"{}:{}", form.mobile.clone(), lock.get(&form.mobile.clone()).unwrap().0}
-                    HttpResponse::Ok().body("Verification code send successfully.")
+                    HttpResponse::Ok().json(
+                        OperationResult {
+                            result_en: Some("success".to_owned()),
+                            msg_en: Some("Verification code send successfully.".to_owned()),
+                            result_cn: None,
+                            msg_cn: None,
+                        })
                 },
                 _ => {
-                    HttpResponse::InternalServerError().body("For some reason verification code has not sended.\nMaybe your mobile is incorrect.\nPlease retry.")
+                    HttpResponse::InternalServerError().json(
+                        OperationResult {
+                            result_en: Some("error".to_owned()),
+                            msg_en: Some("Error occured in sms server. Maybe your mobile is incorrect.".to_owned()),
+                            result_cn: None,
+                            msg_cn: None,
+                        })
                 }
             }
         },
         Err(_) => {
-            HttpResponse::InternalServerError().body("For some reason verification code has not sended.\nPlease retry.")
+            HttpResponse::InternalServerError().json(
+                OperationResult {
+                    result_en: Some("unexpected error".to_owned()),
+                    msg_en: Some("Error occured in sms server. Please retry.".to_owned()),
+                    result_cn: None,
+                    msg_cn: None,
+                })
         }
     }
 }
@@ -144,7 +180,15 @@ pub async fn quick_login(
                     .await;
                 let user;
                 match res {
-                    Err(_) => { return HttpResponse::InternalServerError().body("Unexpected Database error while checking user information."); },
+                    Err(_) => { 
+                        return HttpResponse::InternalServerError().json(
+                            OperationResult {
+                                result_en: Some("unexpected error".to_owned()),
+                                msg_en: Some("Something went wrong in database while checking user information.".to_owned()),
+                                result_cn: None,
+                                msg_cn: None,
+                            });
+                    },
                     Ok(inner_res) => { 
                         match inner_res {
                             Err(_) => {
@@ -158,15 +202,37 @@ pub async fn quick_login(
                                         job_number: None,
                                     }).await;
                                 match register_res {
-                                    Err(_) => { return HttpResponse::InternalServerError().body("Unexpected Database error while auto creating user."); },
+                                    Err(_) => { 
+                                        return HttpResponse::InternalServerError().json(
+                                            OperationResult {
+                                                result_en: Some("unexpected error".to_owned()),
+                                                msg_en: Some("Something went wrong in database while auto creating user.".to_owned()),
+                                                result_cn: None,
+                                                msg_cn: None,
+                                            });
+                                    },
                                     Ok(handler_result) => { 
                                         match handler_result {
-                                            Err(msg) => { return HttpResponse::BadRequest().body(format!("Register failed.\n{}.", msg)); },
+                                            Err(msg) => { 
+                                                return HttpResponse::BadRequest().json(
+                                                    OperationResult {
+                                                        result_en: Some("error".to_owned()),
+                                                        msg_en: Some(format!("Register failed.\n{}.", msg)),
+                                                        result_cn: None,
+                                                        msg_cn: None,
+                                                    });
+                                            },
                                             Ok(user) => { 
                                                 let mut lock = VERIFICATION_MAP.write().unwrap();
                                                 lock.remove(&form.mobile);
                                                 id.remember(user.id.to_string());
-                                                return HttpResponse::Ok().body(format!("Successfully registered.\nWelcome {}.\nYour password is the verification code.", user.username));
+                                                return HttpResponse::Ok().json(
+                                                    OperationResult {
+                                                        result_en: Some("success".to_owned()),
+                                                        msg_en: Some(format!("Successfully registered.\nWelcome {}.\nYour password is the verification code.", user.username)),
+                                                        result_cn: None,
+                                                        msg_cn: None,
+                                                    });
                                             },
                                         }
                                     }
@@ -179,17 +245,41 @@ pub async fn quick_login(
                 let mut lock = VERIFICATION_MAP.write().unwrap();
                 lock.remove(&form.mobile);
                 id.remember(user.id.to_string());
-                HttpResponse::Ok().body(format!("Welcome {}.", user.username))
+                HttpResponse::Ok().json(
+                    OperationResult {
+                        result_en: Some("success".to_owned()),
+                        msg_en: Some(format!("Welcome {}.", user.username)),
+                        result_cn: None,
+                        msg_cn: None,
+                    })
             } else {
                 let mut lock = VERIFICATION_MAP.write().unwrap();
                 lock.remove(&form.mobile);
-                HttpResponse::BadRequest().body("Quick login failed.\nYour verification code is out of date.")
+                HttpResponse::BadRequest().json(
+                    OperationResult {
+                        result_en: Some("rejected".to_owned()),
+                        msg_en: Some("Your verification code is out of date.".to_owned()),
+                        result_cn: None,
+                        msg_cn: None,
+                    })
             }
         } else {
-            HttpResponse::BadRequest().body("Quick login failed.\nYour verification code is not correct.")
+            HttpResponse::BadRequest().json(
+                OperationResult {
+                    result_en: Some("rejected".to_owned()),
+                    msg_en: Some("Your verification code is not correct.".to_owned()),
+                    result_cn: None,
+                    msg_cn: None,
+                })
         }
     } else {
-        HttpResponse::BadRequest().body("Quick login failed.\nPlease require verification code first.")
+        HttpResponse::BadRequest().json(
+            OperationResult {
+                result_en: Some("rejected".to_owned()),
+                msg_en: Some("Please require verification code first.".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            })
     }
 }
 
@@ -198,14 +288,20 @@ pub async fn logout(
 ) -> HttpResponse {
     if !id.identity().is_none() {
         id.forget();
-        HttpResponse::Ok()
-        .json(OperationResult{
-            msg: "logout successfully.".to_owned(),
-        })
+        HttpResponse::Ok().json(
+            OperationResult {
+                result_en: Some("success".to_owned()),
+                msg_en: Some("Logout successfully.".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            })
     } else {
-        HttpResponse::BadRequest()
-        .json(OperationResult{
-            msg: "You are not online now.".to_owned(),
-        })
+        HttpResponse::BadRequest().json(
+            OperationResult {
+                result_en: Some("rejected".to_owned()),
+                msg_en: Some("You are not online now.".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            })
     }
 }

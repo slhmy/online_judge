@@ -5,6 +5,7 @@ use crate::{
     utils::{
         role_filter::customize_role,
         regex_matcher::RegexMatcher,
+        operation_result::OperationResult,
     },
 };
 use actix::prelude::*;
@@ -151,10 +152,26 @@ pub async fn change_info(
             .send(UserId(user_id.parse::<i32>().unwrap())).await;
         let user;
         match get_user_res {
-            Err(_) => { return HttpResponse::InternalServerError().body("Unexpected Database error."); },
+            Err(_) => { 
+                return HttpResponse::InternalServerError().json(
+                    OperationResult {
+                        result_en: Some("unexpected error".to_owned()),
+                        msg_en: Some("Something went wrong in database".to_owned()),
+                        result_cn: None,
+                        msg_cn: None,
+                    });
+            },
             Ok(inner_res) => { 
                 match inner_res {
-                    Err(msg) => { return HttpResponse::BadRequest().body(format!("Get User information failed.\n{}.", msg)); },
+                    Err(msg) => { 
+                        return HttpResponse::BadRequest().json(
+                            OperationResult {
+                                result_en: Some("error".to_owned()),
+                                msg_en: Some(format!("Get User information failed.\n{}.", msg)),
+                                result_cn: None,
+                                msg_cn: None,
+                            })
+                    },
                     Ok(inner_user) => { user = inner_user; },
                 }
             },
@@ -163,18 +180,48 @@ pub async fn change_info(
         if user.role == "admin".to_owned() || user.id == form.id {
             res = data.db.send(form.into_inner()).await;
         } else {
-            return HttpResponse::BadRequest().body("You are not allowed to change other user's information.");
+            return HttpResponse::BadRequest().json(
+                OperationResult {
+                    result_en: Some("rejected".to_owned()),
+                    msg_en: Some("You are not allowed to change other user's information.".to_owned()),
+                    result_cn: None,
+                    msg_cn: None,
+                });
         }
     } else {
-        return HttpResponse::BadRequest().body("You are not logined now.");   
+        return HttpResponse::BadRequest().json(
+            OperationResult {
+                result_en: Some("rejected".to_owned()),
+                msg_en: Some("You are not logined now.".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            });
     }
 
     match res {
-        Err(_) => HttpResponse::InternalServerError().body("Unexpected Database error."),
+        Err(_) => HttpResponse::InternalServerError().json(
+            OperationResult {
+                result_en: Some("unexpected error".to_owned()),
+                msg_en: Some("Something went wrong in database".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            }),
         Ok(handler_result) => { 
             match handler_result {
-                Err(msg) => HttpResponse::BadRequest().body(format!("Change information failed.\n{}.", msg)),
-                Ok(_) => HttpResponse::Ok().body("Change information successfully."),
+                Err(msg) => HttpResponse::BadRequest().json(
+                    OperationResult {
+                        result_en: Some("error".to_owned()),
+                        msg_en: Some(format!("Change information failed.\n{}.", msg)),
+                        result_cn: None,
+                        msg_cn: None,
+                    }),
+                Ok(_) => HttpResponse::Ok().json(
+                    OperationResult {
+                        result_en: Some("success".to_owned()),
+                        msg_en: Some("Change information successfully.".to_owned()),
+                        result_cn: None,
+                        msg_cn: None,
+                    }),
             }
         }
     }
@@ -196,10 +243,25 @@ pub async fn delete_user(
             .send(UserId(user_id.parse::<i32>().unwrap())).await;
         let user;
         match get_user_res {
-            Err(_) => { return HttpResponse::InternalServerError().body("Unexpected Database error."); },
+            Err(_) => { 
+                return HttpResponse::InternalServerError().json(
+                    OperationResult {
+                        result_en: Some("unexpected error".to_owned()),
+                        msg_en: Some("Something went wrong in database".to_owned()),
+                        result_cn: None,
+                        msg_cn: None,
+                    });
+            },
             Ok(inner_res) => { 
                 match inner_res {
-                    Err(msg) => { return HttpResponse::BadRequest().body(format!("Get User information failed.\n{}.", msg)); },
+                    Err(msg) => { return HttpResponse::BadRequest().json(
+                        OperationResult {
+                            result_en: Some("error".to_owned()),
+                            msg_en: Some(format!("Get User information failed.\n{}.", msg)),
+                            result_cn: None,
+                            msg_cn: None,
+                        });
+                    },
                     Ok(inner_user) => { user = inner_user; },
                 }
             },
@@ -209,18 +271,48 @@ pub async fn delete_user(
             res = data.db
                 .send(form.into_inner()).await;
         } else {
-            return HttpResponse::BadRequest().body("You are not allowed to delete user.");
+            return HttpResponse::BadRequest().json(
+                OperationResult {
+                    result_en: Some("rejected".to_owned()),
+                    msg_en: Some("You are not allowed to delete user.".to_owned()),
+                    result_cn: None,
+                    msg_cn: None,
+                });
         }
     } else {
-        return HttpResponse::BadRequest().body("You are not logined now.");   
+        return HttpResponse::BadRequest().json(
+            OperationResult {
+                result_en: Some("rejected".to_owned()),
+                msg_en: Some("You are not logined now.".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            });
     }
     
     match res {
-        Err(_) => HttpResponse::InternalServerError().body("Unexpected Database error."),
+        Err(_) => HttpResponse::InternalServerError().json(
+            OperationResult {
+                result_en: Some("unexpected error".to_owned()),
+                msg_en: Some("Something went wrong in database".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            }),
         Ok(handler_result) => { 
             match handler_result {
-                Err(msg) => HttpResponse::BadRequest().body(format!("Delete user failed.\n{}.", msg)),
-                Ok(_res) => HttpResponse::Ok().body("Delete user successfully."),
+                Err(msg) => HttpResponse::BadRequest().json(
+                    OperationResult {
+                        result_en: Some("error".to_owned()),
+                        msg_en: Some(format!("Delete user failed.\n{}.", msg)),
+                        result_cn: None,
+                        msg_cn: None,
+                    }),
+                Ok(_res) => HttpResponse::Ok().json(
+                    OperationResult {
+                        result_en: Some("success".to_owned()),
+                        msg_en: Some("Delete user successfully.".to_owned()),
+                        result_cn: None,
+                        msg_cn: None,
+                    }),
             }
         }
     }
@@ -235,10 +327,26 @@ pub async fn get_all_users(
         let get_user_res = data.db.send(UserId(user_id.parse::<i32>().unwrap())).await;
         let user;
         match get_user_res {
-            Err(_) => {return HttpResponse::InternalServerError().body("Unexpected Database error."); },
+            Err(_) => {
+                return HttpResponse::InternalServerError().json(
+                    OperationResult {
+                        result_en: Some("unexpected error".to_owned()),
+                        msg_en: Some("Unexpected Database error.".to_owned()),
+                        result_cn: None,
+                        msg_cn: None,
+                    });
+            },
             Ok(inner_res) => { 
                 match inner_res {
-                    Err(msg) => { return HttpResponse::BadRequest().body(format!("Get User information failed.\n{}.", msg)); },
+                    Err(msg) => { 
+                        return HttpResponse::BadRequest().json(
+                            OperationResult {
+                                result_en: Some("error".to_owned()),
+                                msg_en: Some(format!("Get User information failed.\n{}.", msg)),
+                                result_cn: None,
+                                msg_cn: None,
+                            });
+                    },
                     Ok(inner_user) => { user = inner_user; },
                 }
             },
@@ -247,17 +355,41 @@ pub async fn get_all_users(
         if user.role == "admin".to_owned() {
             res = data.db.send(AllUsers()).await;
         } else {
-            return HttpResponse::BadRequest().body("You are not allowed to get all users.");
+            return HttpResponse::BadRequest().json(
+                OperationResult {
+                    result_en: Some("rejected".to_owned()),
+                    msg_en: Some("You are not allowed to get all users.".to_owned()),
+                    result_cn: None,
+                    msg_cn: None,
+                });
         }
     } else {
-        return HttpResponse::BadRequest().body("You are not logined now.");   
+        return HttpResponse::BadRequest().json(
+            OperationResult {
+                result_en: Some("rejected".to_owned()),
+                msg_en: Some("You are not logined now.".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            });
     }
     
     match res {
-        Err(_) => HttpResponse::InternalServerError().body("Unexpected Database error."),
+        Err(_) => HttpResponse::InternalServerError().json(
+            OperationResult {
+                result_en: Some("unexpected error".to_owned()),
+                msg_en: Some("Unexpected Database error.".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            }),
         Ok(handler_result) => { 
             match handler_result {
-                Err(msg) => HttpResponse::BadRequest().body(format!("Get all users failed.\n{}.", msg)),
+                Err(msg) => HttpResponse::BadRequest().json(
+                    OperationResult {
+                        result_en: Some("error".to_owned()),
+                        msg_en: Some(format!("Get all users failed.\n{}.", msg)),
+                        result_cn: None,
+                        msg_cn: None,
+                    }),
                 Ok(all_users) => HttpResponse::Ok().json(all_users),
             }
         }

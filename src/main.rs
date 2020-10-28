@@ -74,7 +74,8 @@ async fn main() -> io::Result<()> {
                 // <- create identity middleware
                 CookieIdentityPolicy::new(&[0; 32])    // <- create cookie identity policy
                       .name("auth-cookie")
-                      .max_age(60)
+                      .path("/")
+                      .max_age(1800)
                       .visit_deadline(Duration::minutes(30))
                       .secure(false)))
             .configure(graphql::route)

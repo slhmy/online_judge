@@ -14,10 +14,30 @@ pub mod schema {
     }
 }
 
+use juniper::Context as JuniperContext;
+use crate::{
+    database::*,
+};
+use std::sync::Arc;
+
+#[derive(Clone)]
+pub struct Context {
+    pub db: web::Data<State>,
+}
+
+impl JuniperContext for Context {}
+
+impl Context {
+    pub fn new(db: web::Data<State>) -> Self {
+        Self {
+            db: db,
+        }
+    }
+}
+
 use actix_web::*;
 use juniper::http::graphiql::graphiql_source;
 use juniper::http::GraphQLRequest;
-use std::sync::Arc;
 use schema::*;
 
 pub async fn graphiql() -> HttpResponse {
@@ -28,17 +48,17 @@ pub async fn graphiql() -> HttpResponse {
 }
 
 pub async fn graphql(
+    db: web::Data<State>,
     st: web::Data<Arc<Schema>>,
     data: web::Json<GraphQLRequest>,
 ) -> Result<HttpResponse, Error> {
-    let user = web::block(move || {
-        let res = data.execute(&st, &());
-        Ok::<_, serde_json::error::Error>(serde_json::to_string(&res)?)
-    })
-    .await?;
+    let ctx = Context::new(db);
+    let res = data.execute(&st, &ctx);
+    let json = serde_json::to_string(&res).map_err(error::ErrorInternalServerError)?;
+
     Ok(HttpResponse::Ok()
         .content_type("application/json")
-        .body(user))
+        .body(json))
 }
 
 pub(super) fn route(cfg: &mut web::ServiceConfig) {

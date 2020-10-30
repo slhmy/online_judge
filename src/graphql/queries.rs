@@ -1,6 +1,6 @@
 pub struct QueryRoot;
 use juniper::FieldResult;
-
+use super::Context;
 use super::objects::{
     starwar::*,
     user::*,
@@ -14,7 +14,17 @@ use crate::service::{
     problem_service::*,
 };
 
-#[juniper::object]
+use crate::{
+    problem::service::{
+        catalog::{
+            Catalog,
+            get_catalog as get_catalog_service,
+        }
+    },
+    errors::ServiceResult,
+};
+
+#[juniper::object(Context = Context)]
 /// This is the root for all kinds of queries, you can get any thing avaliabe here
 impl QueryRoot {
     /// Starwar query example
@@ -76,5 +86,13 @@ impl QueryRoot {
             lowest_user_identity: UserIdentity::Teacher,
             special_permissions_key: Some("YOUR_PERMISSIONS_KEY".to_owned()),
         })
+    }
+
+    fn get_catalog(
+        context: &Context,
+        region: String, 
+        problems_per_page: Option<i32>,
+    ) -> ServiceResult<Catalog> {
+        get_catalog_service(context.db.clone(), region.clone(), problems_per_page)
     }
 }

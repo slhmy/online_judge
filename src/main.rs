@@ -2,10 +2,12 @@ mod schema;
 mod service;
 mod database;
 mod user;
+mod problem;
 mod graphql;
 mod judge_server;
 mod utils;
 mod encryption;
+mod errors;
 
 #[macro_use] extern crate log;
 #[macro_use] extern crate diesel;
@@ -76,11 +78,12 @@ async fn main() -> io::Result<()> {
                       .name("auth-cookie")
                       .path("/")
                       .http_only(false)
-                      .max_age(1800)
+                      .max_age(1800)    
                       .visit_deadline(Duration::minutes(30))
                       .secure(false)))
             .configure(graphql::route)
             .configure(user::route)
+            .configure(problem::route)
             .configure(judge_server::route)
     })
     .bind("0.0.0.0:8080")?

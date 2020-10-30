@@ -11,6 +11,7 @@ pub struct User {
     pub salt: String,
     pub register_time: NaiveDateTime,
     pub hash: Vec<u8>,
+    pub school: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize)]

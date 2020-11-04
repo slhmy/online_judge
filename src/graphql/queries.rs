@@ -19,6 +19,10 @@ use crate::{
         catalog::{
             Catalog,
             get_catalog as get_catalog_service,
+        },
+        content::{
+            OutProblem, 
+            get_problem as get_problem_service,
         }
     },
     errors::ServiceResult,
@@ -52,8 +56,12 @@ impl QueryRoot {
         )
     }
 
-    fn problem(id: i32) -> FieldResult<Problem> {
-        Ok(get_problem_by_id(id))
+    fn problem(
+        context: &Context, 
+        id: i32, 
+        region: String
+    ) -> ServiceResult<OutProblem> {
+        get_problem_service(context.db.clone(), id, region)
     }
 
     fn status(id: String) -> FieldResult<Status> {
@@ -88,7 +96,7 @@ impl QueryRoot {
         })
     }
 
-    fn get_catalog(
+    fn catalog(
         context: &Context,
         region: String, 
         problems_per_page: Option<i32>,

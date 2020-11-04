@@ -1,6 +1,6 @@
 #[derive(Debug, Clone, Deserialize, Queryable)]
 pub struct Problem {
-    pub id: usize,
+    pub id: i32,
     pub region: String,
     pub title: String,
     pub description: Option<String>,
@@ -12,6 +12,8 @@ pub struct Problem {
     pub tags: Option<Vec<String>>,
     pub sources: Option<Vec<String>>,
     pub difficulty: String,
-    pub submit_times: usize,
-    pub accept_times: usize,
+    pub submit_times: i32,
+    pub accept_times: i32,
+    pub default_max_cpu_time: i32,
+    pub default_max_memory: i32,
 }

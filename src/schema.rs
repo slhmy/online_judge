@@ -14,6 +14,8 @@ table! {
         difficulty -> Text,
         submit_times -> Int4,
         accept_times -> Int4,
+        default_max_cpu_time -> Int4,
+        default_max_memory -> Int4,
     }
 }
 

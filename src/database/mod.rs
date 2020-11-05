@@ -1,7 +1,6 @@
 use diesel::prelude::*;
 use actix::prelude::*;
-use dotenv::dotenv;
-use std::env;
+use crate::DATABASE_URL;
 
 pub struct DbExecutor(pub PgConnection);
 
@@ -15,9 +14,7 @@ pub struct State {
 }
 
 pub fn create_db_executor() -> Addr<DbExecutor> {
-    dotenv().ok();
-    let database_url = env::var("DATABASE_URL")
-        .expect("DATABASE_URL must be set");
+    let database_url = (*DATABASE_URL).clone();
 
     SyncArbiter::start(3, move || {
         DbExecutor(PgConnection::establish(&database_url).unwrap())

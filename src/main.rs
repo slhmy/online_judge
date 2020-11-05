@@ -42,8 +42,29 @@ use crate::{
     graphql::schema as graphql_schema,
     database::*,
 };
+use dotenv::dotenv;
+use std::env;
 
-lazy_static! {    
+lazy_static! {
+    static ref ACCESS_KEY_ID: String = {
+        dotenv().ok();
+        env::var("ACCESS_KEY_ID").expect("ACCESS_KEY_ID must be set")
+    };
+    static ref ACCESS_SECRET: String = {
+        dotenv().ok();
+        env::var("ACCESS_SECRET").expect("ACCESS_SECRET must be set")
+    };
+    static ref DATABASE_URL: String = {
+        dotenv().ok();
+        env::var("DATABASE_URL").expect("DATABASE_URL must be set")  
+    };
+    static ref JUDGE_SERVER_TOKEN: String = {
+        use crate::encryption::encode;
+
+        dotenv().ok();
+        let token_string = &env::var("JUDGE_SERVER_TOKEN").expect("JUDGE_SERVER_TOKEN must be set");
+        encode::get_sha256(token_string)
+    };  
     static ref VERIFICATION_MAP: RwLock<BTreeMap<String, (String, SystemTime)>> = RwLock::new(BTreeMap::new());
     static ref RE_EMAIL: Regex = Regex::new(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$").unwrap();
     static ref RE_MOBILE: Regex = Regex::new(r"^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,5-9]))\d{8}$").unwrap();

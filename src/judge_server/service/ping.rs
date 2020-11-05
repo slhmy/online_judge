@@ -2,11 +2,11 @@ use actix_web::{
     Responder,
     HttpResponse, 
 };
-use crate::encryption::encode;
+use crate::JUDGE_SERVER_TOKEN;
 use actix_web::client::Client;
 
 pub async fn ping_judge_server() -> impl Responder {
-    let token = encode::sha256_token("YOUR_TOKEN_HERE");
+    let token = (*JUDGE_SERVER_TOKEN).clone();
    
     let response = Client::new()
         .post("http://127.0.0.1:12358/ping")

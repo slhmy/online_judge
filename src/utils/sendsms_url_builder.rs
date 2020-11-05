@@ -5,9 +5,8 @@ use chrono::prelude::*;
 use std::collections::BTreeMap;
 use uuid::Uuid;
 use percent_encoding::{utf8_percent_encode, AsciiSet,CONTROLS};
-use dotenv::dotenv;
-use std::env;
 use rand::{thread_rng, Rng};
+use crate::{ ACCESS_KEY_ID, ACCESS_SECRET };
 
 const FRAGMENT: &AsciiSet = &CONTROLS
         .add(b' ')
@@ -63,11 +62,8 @@ fn sign(access_secret: String, string_to_sign: String) -> String {
 }
 
 pub fn get_url(mobile: &str) -> (String, String) {
-    dotenv().ok();
-    let access_key_id = &env::var("ACCESS_KEY_ID")
-        .expect("ACCESS_KEY_ID must be set");
-    let mut access_secret = env::var("ACCESS_SECRET")
-        .expect("ACCESS_SECRET must be set");
+    let access_key_id = (*ACCESS_KEY_ID).clone();
+    let mut access_secret = (*ACCESS_SECRET).clone();
     let mut rng = thread_rng();
     let n: u32 = rng.gen_range(100000, 999999);
     let utc: DateTime<Utc> = Utc::now();
@@ -77,7 +73,7 @@ pub fn get_url(mobile: &str) -> (String, String) {
     let mut paras = BTreeMap::<&str, &str>::new();
     paras.insert("SignatureMethod", "HMAC-SHA1");
     paras.insert("SignatureNonce", &signature_nonce);
-    paras.insert("AccessKeyId", access_key_id);
+    paras.insert("AccessKeyId", &access_key_id);
     paras.insert("SignatureVersion", "1.0");
     paras.insert("Timestamp", &timestamp);
     paras.insert("Format", "json");

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use actix_web::{error::ResponseError, HttpResponse};
 use diesel::result::Error as DBError;
 use juniper::graphql_value;

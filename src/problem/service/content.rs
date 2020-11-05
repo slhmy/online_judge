@@ -29,6 +29,7 @@ pub struct ProblemContext {
 pub struct OutProblem {
     id: i32,
     region: String,
+    title: String,
     problem: ProblemContext,
     tags: Option<Vec<String>>,
     sources: Option<Vec<String>>,
@@ -74,6 +75,7 @@ impl From<Problem> for OutProblem {
         OutProblem {
             id: id,
             region: region,
+            title: title,
             problem: ProblemContext {
                 max_cpu_time: default_max_cpu_time,
                 max_memory: default_max_memory,

@@ -16,15 +16,15 @@ pub async fn get_catalog(
     form: web::Form<GetCatalogMessage>,
     _id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
-    get_catalog_service(data, form.region.clone(), form.problems_per_page)
+    get_catalog_service(data, form.region.clone(), form.problems_per_page).await
         .map(|res| HttpResponse::Ok().json(&res))
 }
 
 pub async fn get_problem(
     data: web::Data<State>,
     form: web::Form<GetProblemMessage>,
-    _id: Identity,
+    id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
-    get_problem_service(data, form.id, form.region.clone())
+    get_problem_service(data, form.id, form.region.clone(), id).await
         .map(|res| HttpResponse::Ok().json(&res))
 }

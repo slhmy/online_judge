@@ -16,4 +16,5 @@ pub struct Problem {
     pub accept_times: i32,
     pub default_max_cpu_time: i32,
     pub default_max_memory: i32,
+    pub is_spj: bool,
 }

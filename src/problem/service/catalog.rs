@@ -2,7 +2,6 @@ use crate::{
     database::*,
     errors::{ServiceError, ServiceResult},
 };
-use futures::executor;
 use diesel::prelude::*;
 use actix::prelude::*;
 use actix_web::web;
@@ -43,7 +42,6 @@ impl Handler<GetCatalogMessage> for DbExecutor {
 
         let result = problems.filter(region.eq(msg.region))
             .select( (id, title, tags, difficulty, accept_times, submit_times) )
-            .limit(2)
             .load::<(i32, String, Option<Vec<String>>, String, i32, i32)>(&self.0)
             .expect("Error loading problems.");
         let mut catalog = Catalog {
@@ -81,15 +79,15 @@ impl Handler<GetCatalogMessage> for DbExecutor {
     }
 }
 
-pub fn get_catalog (
+pub async fn get_catalog (
     data: web::Data<State>,
     region: String,
     problems_per_page: Option<i32>,
 ) -> ServiceResult<Catalog> {
-    let db_result = executor::block_on(data.db.send(GetCatalogMessage {
+    let db_result = data.db.send(GetCatalogMessage {
         region: region,
         problems_per_page: problems_per_page,
-    }));
+    }).await;
 
     match db_result {
         Err(_) => Err(ServiceError::InternalServerError),

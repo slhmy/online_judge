@@ -3,10 +3,10 @@ use crate::{
     problem::model::Problem,
     errors::{ServiceError, ServiceResult},
 };
-use futures::executor;
 use diesel::prelude::*;
 use actix::prelude::*;
 use actix_web::web;
+use actix_identity::Identity;
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct Example {
@@ -30,6 +30,9 @@ pub struct OutProblem {
     id: i32,
     region: String,
     title: String,
+    default_max_cpu_time: i32,
+    default_max_memory: i32,
+    is_spj: bool,
     problem: ProblemContext,
     tags: Option<Vec<String>>,
     sources: Option<Vec<String>>,
@@ -58,6 +61,7 @@ impl From<Problem> for OutProblem {
             accept_times,
             default_max_cpu_time,
             default_max_memory,
+            is_spj,
         } = problem;
 
         let examples = 
@@ -76,6 +80,9 @@ impl From<Problem> for OutProblem {
             id: id,
             region: region,
             title: title,
+            default_max_cpu_time: default_max_cpu_time,
+            default_max_memory: default_max_memory,
+            is_spj: is_spj,
             problem: ProblemContext {
                 max_cpu_time: default_max_cpu_time,
                 max_memory: default_max_memory,
@@ -122,15 +129,16 @@ impl Handler<GetProblemMessage> for DbExecutor {
 }
 
 
-pub fn get_problem(
+pub async fn get_problem(
     data: web::Data<State>,
     id: i32,
     region: String,
+    _id: Identity,
 ) -> ServiceResult<OutProblem> {
-    let db_result = executor::block_on(data.db.send(GetProblemMessage {
+    let db_result = data.db.send(GetProblemMessage {
         id: id,
         region: region,
-    }));
+    }).await;
 
     match db_result {
         Err(_) => Err(ServiceError::InternalServerError),

@@ -1,11 +1,11 @@
 pub struct QueryRoot;
+use futures::executor;
 use juniper::FieldResult;
 use super::Context;
 use super::objects::{
     starwar::*,
     user::*,
     status::*,
-    problem::*,
     tag::*,
 };
 
@@ -61,7 +61,7 @@ impl QueryRoot {
         id: i32, 
         region: String
     ) -> ServiceResult<OutProblem> {
-        get_problem_service(context.db.clone(), id, region)
+        executor::block_on(get_problem_service(context.db.clone(), id, region, context.id.clone()))
     }
 
     fn status(id: String) -> FieldResult<Status> {
@@ -96,11 +96,11 @@ impl QueryRoot {
         })
     }
 
-    fn catalog(
+    async fn catalog(
         context: &Context,
         region: String, 
         problems_per_page: Option<i32>,
     ) -> ServiceResult<Catalog> {
-        get_catalog_service(context.db.clone(), region.clone(), problems_per_page)
+        executor::block_on(get_catalog_service(context.db.clone(), region.clone(), problems_per_page))
     }
 }

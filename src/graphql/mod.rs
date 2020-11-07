@@ -19,18 +19,21 @@ use crate::{
     database::*,
 };
 use std::sync::Arc;
+use actix_identity::Identity;
 
 #[derive(Clone)]
 pub struct Context {
     pub db: web::Data<State>,
+    pub id: Identity,
 }
 
 impl JuniperContext for Context {}
 
 impl Context {
-    pub fn new(db: web::Data<State>) -> Self {
+    pub fn new(db: web::Data<State>, id: Identity) -> Self {
         Self {
             db: db,
+            id: id,
         }
     }
 }
@@ -51,8 +54,9 @@ pub async fn graphql(
     db: web::Data<State>,
     st: web::Data<Arc<Schema>>,
     data: web::Json<GraphQLRequest>,
+    id: Identity,
 ) -> Result<HttpResponse, Error> {
-    let ctx = Context::new(db);
+    let ctx = Context::new(db, id);
     let res = data.execute(&st, &ctx);
     let json = serde_json::to_string(&res).map_err(error::ErrorInternalServerError)?;
 

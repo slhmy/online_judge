@@ -16,6 +16,7 @@ table! {
         accept_times -> Int4,
         default_max_cpu_time -> Int4,
         default_max_memory -> Int4,
+        is_spj -> Bool,
     }
 }
 

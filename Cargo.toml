@@ -12,7 +12,7 @@ actix-web = "3.0.2"
 actix-rt = "1.0.0"
 actix-identity = "0.3.1"
 actix-cors = "0.4.1"
-actix = "0.9.0"
+actix = "0.10.0"
 listenfd = "0.3"
 
 serde = "1.0"
@@ -34,7 +34,7 @@ hex = "0.4.2"
 lazy_static = "1.4.0"
 diesel = { version = "1.4.4", features = ["postgres", "chrono"] }
 thiserror = "1.0"
-uuid = { version = "0.7", features = ["serde", "v4"] }
+uuid = { version = "0.8.1", features = ["serde", "v4"] }
 chrono = { version = "0.4", features = ["serde"] }
 argon2rs = "0.2"
 time = "0.2"
@@ -43,3 +43,5 @@ percent-encoding = "2.1.0"
 rand = "0.7.3"
 http = "0.2.1"
 futures = "0.3.7"
+casbin = "2.0.2"
+actix-http = "2.1.0"

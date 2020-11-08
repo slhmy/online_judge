@@ -1,2 +1,4 @@
 /target
+/data/run
+/data/log
 .env

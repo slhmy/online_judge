@@ -25,6 +25,12 @@ use crate::{
             get_problem as get_problem_service,
         }
     },
+    judge_server::service::{
+        info::{
+            OutJudgeServerInfo,
+            server_info as server_info_service,
+        },
+    },
     errors::ServiceResult,
 };
 
@@ -96,11 +102,17 @@ impl QueryRoot {
         })
     }
 
-    async fn catalog(
+    fn catalog(
         context: &Context,
         region: String, 
         problems_per_page: Option<i32>,
     ) -> ServiceResult<Catalog> {
         executor::block_on(get_catalog_service(context.db.clone(), region.clone(), problems_per_page))
+    }
+
+    fn judge_servers(
+        context: &Context,
+    ) -> ServiceResult<Vec<OutJudgeServerInfo>> {
+        executor::block_on(server_info_service(context.id.clone()))
     }
 }

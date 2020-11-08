@@ -76,15 +76,15 @@ async fn get_judge_result(
     judge_type: String,
     output: bool,
 ) -> Result<OutJudgeResult, String> {
-    use crate::judge_server:: { model::*, config::*, utils::mapper::* };
-    use crate::JUDGE_SERVER_TOKEN;
+    use crate::judge_server:: { model::*, config::*, utils::mapper::*, utils::chooser::* };
     use actix_web::client::Client;
     use std::fs::File;
     use std::io::prelude::*;
     use std::str;    
 
-    info!("judging");
-    let token = (*JUDGE_SERVER_TOKEN).clone();
+    let judge_server = choose_judge_server();
+    if judge_server.is_none() { return Err("No judge server is online".to_owned()); }
+    let (url, token) = judge_server.unwrap();
 
     let mut spj_version: Option<String> = None;
     let mut spj_config: Option<SpjConfig> = None;
@@ -100,7 +100,6 @@ async fn get_judge_result(
         let mut contents = String::new();
         file.read_to_string(&mut contents).expect("Error reading spj src");
         spj_src = Some(contents);
-        info!("{:?}", spj_src);
     }
    
     let judge_setting = JudgeSetting {
@@ -116,16 +115,16 @@ async fn get_judge_result(
         spj_src: spj_src,
         output: output,
     };
-    info!("{:?}", judge_setting);
+
     let mut response = Client::new()
-        .post("http://127.0.0.1:12358/judge")
+        .post(url + "/judge")
         .set_header("X-Judge-Server-Token", token)
         .set_header("Content-Type", "application/json")
         .send_json(&judge_setting)
         .await.expect("Error sending judge msg to judge server.");
     let result_vec = response.body().await.expect("Error getting response body.").to_vec();
     let result_str = str::from_utf8(&result_vec).unwrap();
-    info!("Response: {:?}", result_str);
+    
     let err_checker: ErrChecker = serde_json::from_str(result_str).unwrap();
     if err_checker.err.is_none() {
         let judge_result: JudgeResult = serde_json::from_str(result_str).unwrap();

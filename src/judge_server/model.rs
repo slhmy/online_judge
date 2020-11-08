@@ -1,4 +1,5 @@
 use super::config::*;
+use std::time::SystemTime;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct TestCase {
@@ -50,4 +51,16 @@ pub struct JudgeResult {
 pub struct ErrResult {
     pub err: Option<String>,
     pub data: String,
+}
+
+#[derive(Debug, Clone)]
+pub struct JudgeServerInfo {
+    pub judger_version: String,
+    pub hostname: String,
+    pub cpu_core: i32,
+    pub memory: f32,
+    pub cpu: f32,
+    pub service_url: String,
+    pub token: String,
+    pub heartbeat_time: SystemTime,
 }

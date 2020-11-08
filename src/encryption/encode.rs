@@ -19,8 +19,7 @@ pub fn get_sha256(key: &str) -> String {
 
 pub fn get_stripped_md5_output(output: &str) -> String {
     let mut buf = [0u8; 16];
-    let x: &[_] = &['\n', '\r', '\t', ' '];
-    hash_token::<Md5>(output.trim_end_matches(x), &mut buf);
+    hash_token::<Md5>(output.trim_end(), &mut buf);
     (&buf[..]).to_vec().encode_hex::<String>()
 }
 

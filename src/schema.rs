@@ -16,6 +16,28 @@ table! {
         accept_times -> Int4,
         default_max_cpu_time -> Int4,
         default_max_memory -> Int4,
+        test_case -> Nullable<Text>,
+        max_score -> Int4,
+    }
+}
+
+table! {
+    status (id) {
+        id -> Uuid,
+        owner_id -> Int4,
+        problem_id -> Int4,
+        problem_region -> Text,
+        state -> Text,
+        judge_type -> Text,
+        result -> Nullable<Text>,
+        score -> Nullable<Int4>,
+        data -> Nullable<Text>,
+    }
+}
+
+table! {
+    test_cases (name) {
+        name -> Text,
         is_spj -> Bool,
     }
 }
@@ -35,7 +57,12 @@ table! {
     }
 }
 
+joinable!(problems -> test_cases (test_case));
+joinable!(status -> users (owner_id));
+
 allow_tables_to_appear_in_same_query!(
     problems,
+    status,
+    test_cases,
     users,
 );

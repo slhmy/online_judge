@@ -51,11 +51,21 @@ impl Handler<GetSettingMessage> for DbExecutor {
     
     fn handle(&mut self, msg: GetSettingMessage, _: &mut Self::Context) -> Self::Result {
         use crate::schema::problems::dsl::*;
+        use crate::schema::test_cases::dsl::*;
 
-        let (default_max_cpu_time_val, default_max_memory_val, is_spj_val) = problems.filter(region.eq(msg.region))
-            .select( (default_max_cpu_time, default_max_memory, is_spj) )
-            .first::<(i32, i32, bool)>(&self.0)
+        let (default_max_cpu_time_val, default_max_memory_val, test_case_name) = problems
+            .filter(region.eq(msg.region))
+            .filter(id.eq(msg.problem_id))
+            .select( (default_max_cpu_time, default_max_memory, test_case) )
+            .first::<(i32, i32, Option<String>)>(&self.0)
             .expect("Error loading problem setting.");
+
+        info!("{:?}", test_case_name);
+        if test_case_name.is_none() { return Err("Problem doesn't have test cases.".to_owned()) }
+        let is_spj_val = test_cases.filter(name.eq(test_case_name.unwrap()))
+            .select(is_spj)
+            .first::<bool>(&self.0)
+            .expect("Error loading test case info.");
 
         Ok(ProblemSetting{
             default_max_cpu_time: default_max_cpu_time_val,

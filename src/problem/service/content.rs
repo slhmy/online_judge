@@ -32,7 +32,7 @@ pub struct OutProblem {
     title: String,
     default_max_cpu_time: i32,
     default_max_memory: i32,
-    is_spj: bool,
+    max_score: i32,
     problem: ProblemContext,
     tags: Option<Vec<String>>,
     sources: Option<Vec<String>>,
@@ -61,7 +61,8 @@ impl From<Problem> for OutProblem {
             accept_times,
             default_max_cpu_time,
             default_max_memory,
-            is_spj,
+            test_case: _,
+            max_score,
         } = problem;
 
         let examples = 
@@ -82,7 +83,7 @@ impl From<Problem> for OutProblem {
             title: title,
             default_max_cpu_time: default_max_cpu_time,
             default_max_memory: default_max_memory,
-            is_spj: is_spj,
+            max_score: max_score,
             problem: ProblemContext {
                 max_cpu_time: default_max_cpu_time,
                 max_memory: default_max_memory,

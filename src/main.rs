@@ -6,7 +6,6 @@ mod problem;
 mod graphql;
 mod judge_server;
 mod utils;
-mod encryption;
 mod errors;
 
 #[macro_use] extern crate log;

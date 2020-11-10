@@ -1,12 +1,12 @@
 use crate::{
     database::*,
     user::model::*,
-    encryption::encode::{
-        make_salt,
-        make_hash,
-    },
     schema::users,
     utils::{
+        encryption::encode::{
+            make_salt,
+            make_hash,
+        },
         role_filter::customize_role,
         regex_matcher::RegexMatcher,
         operation_result::OperationResult,

@@ -1,3 +1,5 @@
+#![allow(dead_code)]
+
 use sha2::Sha256;
 use md5::Md5;
 use digest::Digest;

@@ -1,8 +1,8 @@
 use crate::{
     database::*,
     user::model::*,
-    encryption::encode::make_hash,
     utils::{
+        encryption::encode::make_hash,
         role_filter::customize_role,
         regex_matcher::RegexMatcher,
         operation_result::OperationResult,

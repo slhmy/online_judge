@@ -31,7 +31,8 @@ table! {
         judge_type -> Text,
         result -> Nullable<Text>,
         score -> Nullable<Int4>,
-        data -> Nullable<Text>,
+        setting_data -> Text,
+        result_data -> Nullable<Text>,
     }
 }
 

@@ -49,7 +49,7 @@ impl Handler<SubmitStatusMessage> for DbExecutor {
                 state: "Waiting".to_owned(),
                 judge_type: msg.judge_type,
                 setting_data: msg.setting_data,
-                submit_time: Some(get_cur_naive_date_time()),
+                submit_time: get_cur_naive_date_time(),
                 start_pend_time: None,
                 finish_time: None,
                 language: msg.language,

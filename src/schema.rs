@@ -35,7 +35,7 @@ table! {
         setting_data -> Text,
         result_data -> Nullable<Text>,
         err_reason -> Nullable<Text>,
-        submit_time -> Nullable<Timestamp>,
+        submit_time -> Timestamp,
         start_pend_time -> Nullable<Timestamp>,
         finish_time -> Nullable<Timestamp>,
         language -> Text,

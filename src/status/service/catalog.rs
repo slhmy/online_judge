@@ -2,6 +2,7 @@ use crate::{
     database::*,
     errors::{ServiceError, ServiceResult},
 };
+use chrono::*;
 use diesel::prelude::*;
 use actix::prelude::*;
 use actix_web::web;
@@ -31,6 +32,9 @@ pub struct StatusCatalogElement {
     pub judge_type: String,
     pub result: Option<String>,
     pub score: Option<f64>,
+    pub submit_time: NaiveDateTime,
+    pub start_pend_time: Option<NaiveDateTime>,
+    pub finish_time: Option<NaiveDateTime>,
 }
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
@@ -102,6 +106,7 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
                 .and(users::username.ilike(
                     "%".to_owned() + &msg.username.clone().unwrap_or("".to_owned()) + "%"
                 ).or(msg.username.is_none()))))
+            .order_by(status::submit_time.desc())
             .select((
                 status::id,
                 status::problem_region,
@@ -114,6 +119,9 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
                 status::judge_type,
                 status::result,
                 status::score,
+                status::submit_time,
+                status::start_pend_time,
+                status::finish_time,
             ))
             .offset(((msg.page_number - 1) * msg.count_per_page) as i64)
             .limit(msg.count_per_page as i64)
@@ -129,6 +137,9 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
                 String,
                 Option<String>,
                 Option<f64>,
+                NaiveDateTime,
+                Option<NaiveDateTime>,
+                Option<NaiveDateTime>,
             )>(&self.0)
             .expect("Error loading status.");
 
@@ -149,6 +160,9 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
             t_judge_type,
             t_result,
             t_score,
+            t_submit_time,
+            t_start_pend_time,
+            t_finish_time,
         ) in status_vec {
             catalog.elements.push(StatusCatalogElement{
                 id: t_id,
@@ -166,6 +180,9 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
                 judge_type: t_judge_type,
                 result: t_result,
                 score: t_score,
+                submit_time: t_submit_time,
+                start_pend_time: t_start_pend_time,
+                finish_time: t_finish_time,
             });
         }
 

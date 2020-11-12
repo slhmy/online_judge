@@ -12,8 +12,10 @@ pub struct OutJudgeServerInfo {
     pub cpu_core: i32,
     pub memory: f64,
     pub cpu: f64,
+    pub task_number: i32,
     pub service_url: String,
     pub last_heartbeat: i32,
+    pub is_deprecated: bool,
 }
 
 impl From<JudgeServerInfo> for OutJudgeServerInfo {
@@ -24,9 +26,11 @@ impl From<JudgeServerInfo> for OutJudgeServerInfo {
             cpu_core,
             memory,
             cpu,
+            task_number,
             service_url,
             token: _,
             heartbeat_time,
+            is_deprecated,
         } = info;
 
         let memory = memory as f64;
@@ -39,8 +43,10 @@ impl From<JudgeServerInfo> for OutJudgeServerInfo {
             cpu_core,
             memory,
             cpu,
+            task_number,
             service_url,
             last_heartbeat,
+            is_deprecated,
         }
     }
 }

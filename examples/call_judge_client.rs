@@ -5,7 +5,7 @@ use std::io::prelude::*;
 
 fn main() {
     // 启动子进程
-    let mut p = Command::new("target/debug/examples/send_judge_request")
+    let mut p = Command::new("./exe/send_judge_request")
         .stdin(Stdio::piped())  // 将子进程的标准输入重定向到管道
         .stdout(Stdio::piped()) // 将子进程的标准输出重定向到管道
         .spawn()

@@ -63,7 +63,7 @@ impl Handler<LoginMessage> for DbExecutor {
 }
 
 pub async fn login(
-    data: web::Data<State>, 
+    data: web::Data<DBState>, 
     form: web::Form<LoginMessage>,
     id: Identity,
 ) -> HttpResponse {
@@ -165,7 +165,7 @@ pub struct QucikLoginMessage {
 }
 
 pub async fn quick_login(
-    data: web::Data<State>, 
+    data: web::Data<DBState>, 
     form: web::Form<QucikLoginMessage>,
     id: Identity,
 ) -> HttpResponse {

@@ -5,7 +5,6 @@ use super::Context;
 use super::objects::{
     starwar::*,
     user::*,
-    status::*,
     tag::*,
 };
 
@@ -17,8 +16,8 @@ use crate::service::{
 use crate::{
     problem::service::{
         catalog::{
-            Catalog,
-            get_catalog as get_catalog_service,
+            ProblemCatalog,
+            get_problem_catalog_service,
         },
         content::{
             OutProblem, 
@@ -30,6 +29,12 @@ use crate::{
             OutJudgeServerInfo,
             server_info as server_info_service,
         },
+    },
+    status::service::{
+        catalog::{
+            StatusCatalog,
+            get_status_catalog_service,
+        }
     },
     errors::ServiceResult,
 };
@@ -70,44 +75,37 @@ impl QueryRoot {
         executor::block_on(get_problem_service(context.db.clone(), id, region, context.id.clone()))
     }
 
-    fn status(id: String) -> FieldResult<Status> {
-        Ok(Status {
-            id: 1,
-            information: StatusInformation {
-                problem: get_problem_by_id(1),
-                owner: get_user_by_token(""),
-                region: "Global".to_owned(),
-                submit_time: "2020/10/5 20:45:00".to_owned(),
-                finish_time: "2020/10/5 20:45:02".to_owned(),
-                judge_strategy: JudgeStrategy::ACM,
-                final_result: "Accepted".to_owned(),
-            },
-            is_compile_error: false,
-            compile_error_message: None,
-            judge_details: Some(
-                vec![JudgeResult{
-                    test_case: 1,
-                    result: ResultType::Success,
-                    cpu_time: 1,
-                    real_time: 2,
-                    memory: 1671168,
-                    signal: 0,
-                    exit_code: 0,
-                    error: 0,
-                    output: "3\n".to_owned(),
-                }]
-            ),
-            lowest_user_identity: UserIdentity::Teacher,
-            special_permissions_key: Some("YOUR_PERMISSIONS_KEY".to_owned()),
-        })
+    fn status_catalog(
+        context: &Context,
+        region: String,
+        count_per_page: i32,
+        problem_id: Option<i32>,
+        problem_title: Option<String>,
+        user_id: Option<i32>,
+        username: Option<String>,
+        language: Option<String>,
+        page_number: i32,
+    ) -> ServiceResult<StatusCatalog> {
+        executor::block_on(get_status_catalog_service(
+            context.db.clone(),
+            region,
+            count_per_page,
+            problem_id,
+            problem_title,
+            user_id,
+            username,
+            language,
+            page_number,
+            context.id.clone())
+        )
     }
 
-    fn catalog(
+    fn problem_catalog(
         context: &Context,
         region: String, 
         problems_per_page: Option<i32>,
-    ) -> ServiceResult<Catalog> {
-        executor::block_on(get_catalog_service(context.db.clone(), region.clone(), problems_per_page))
+    ) -> ServiceResult<ProblemCatalog> {
+        executor::block_on(get_problem_catalog_service(context.db.clone(), region.clone(), problems_per_page))
     }
 
     fn judge_servers(

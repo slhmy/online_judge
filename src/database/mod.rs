@@ -9,7 +9,7 @@ impl Actor for DbExecutor {
 }
 
 /// This is state where we will store *DbExecutor* address.
-pub struct State {
+pub struct DBState {
     pub db: Addr<DbExecutor>,
 }
 

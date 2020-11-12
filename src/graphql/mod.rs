@@ -17,22 +17,25 @@ pub mod schema {
 use juniper::Context as JuniperContext;
 use crate::{
     database::*,
+    judge_manager::*,
 };
 use std::sync::Arc;
 use actix_identity::Identity;
 
 #[derive(Clone)]
 pub struct Context {
-    pub db: web::Data<State>,
+    pub db: web::Data<DBState>,
+    pub jm: web::Data<JMState>,
     pub id: Identity,
 }
 
 impl JuniperContext for Context {}
 
 impl Context {
-    pub fn new(db: web::Data<State>, id: Identity) -> Self {
+    pub fn new(db: web::Data<DBState>, jm: web::Data<JMState>, id: Identity) -> Self {
         Self {
             db: db,
+            jm: jm,
             id: id,
         }
     }
@@ -51,12 +54,13 @@ pub async fn graphiql() -> HttpResponse {
 }
 
 pub async fn graphql(
-    db: web::Data<State>,
+    db: web::Data<DBState>,
+    jm: web::Data<JMState>,
     st: web::Data<Arc<Schema>>,
     data: web::Json<GraphQLRequest>,
     id: Identity,
 ) -> Result<HttpResponse, Error> {
-    let ctx = Context::new(db, id);
+    let ctx = Context::new(db, jm, id);
     let res = data.execute(&st, &ctx);
     let json = serde_json::to_string(&res).map_err(error::ErrorInternalServerError)?;
 

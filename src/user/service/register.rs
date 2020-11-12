@@ -72,7 +72,7 @@ impl Handler<ResgisterMessage> for DbExecutor {
 }
 
 pub async fn register(
-    data: web::Data<State>, 
+    data: web::Data<DBState>, 
     form: web::Form<ResgisterMessage>
 ) -> impl Responder {
 

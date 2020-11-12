@@ -1,5 +1,3 @@
-#[macro_use] extern crate serde_derive;
-
 use std::fs::File;
 use std::io::prelude::*;
 use serde_json::json;

@@ -7,7 +7,7 @@ use actix::prelude::*;
 use actix_web::web;
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
-pub struct CatalogElement {
+pub struct ProblemCatalogElement {
     pub id: i32,
     pub title: String,
     pub tags: Option<Vec<String>>,
@@ -18,33 +18,33 @@ pub struct CatalogElement {
 }
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
-pub struct Catalog {
+pub struct ProblemCatalog {
     pub total_count: i32,
-    pub elements: Vec<Vec<CatalogElement>>,
+    pub elements: Vec<Vec<ProblemCatalogElement>>,
     pub page_count: i32,
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct GetCatalogMessage {
+pub struct GetProblemCatalogMessage {
     pub region: String,
     pub problems_per_page: Option<i32>,
 }
 
-impl Message for GetCatalogMessage {
-    type Result = Result<Catalog, String>;
+impl Message for GetProblemCatalogMessage {
+    type Result = Result<ProblemCatalog, String>;
 }
 
-impl Handler<GetCatalogMessage> for DbExecutor {
-    type Result = Result<Catalog, String>;
+impl Handler<GetProblemCatalogMessage> for DbExecutor {
+    type Result = Result<ProblemCatalog, String>;
     
-    fn handle(&mut self, msg: GetCatalogMessage, _: &mut Self::Context) -> Self::Result {
+    fn handle(&mut self, msg: GetProblemCatalogMessage, _: &mut Self::Context) -> Self::Result {
         use crate::schema::problems::dsl::*;
 
         let result = problems.filter(region.eq(msg.region))
             .select( (id, title, tags, difficulty, accept_times, submit_times) )
             .load::<(i32, String, Option<Vec<String>>, String, i32, i32)>(&self.0)
             .expect("Error loading problems.");
-        let mut catalog = Catalog {
+        let mut catalog = ProblemCatalog {
             total_count: 0,
             elements: Vec::new(),
             page_count: 0,
@@ -60,7 +60,7 @@ impl Handler<GetCatalogMessage> for DbExecutor {
                 page_problem_count = 0;
             }
             catalog.elements[current_page_number as usize].push(
-                CatalogElement {
+                ProblemCatalogElement {
                     id: p_id,
                     title: p_title,
                     tags: p_tags,
@@ -79,12 +79,12 @@ impl Handler<GetCatalogMessage> for DbExecutor {
     }
 }
 
-pub async fn get_catalog (
-    data: web::Data<State>,
+pub async fn get_problem_catalog_service (
+    data: web::Data<DBState>,
     region: String,
     problems_per_page: Option<i32>,
-) -> ServiceResult<Catalog> {
-    let db_result = data.db.send(GetCatalogMessage {
+) -> ServiceResult<ProblemCatalog> {
+    let db_result = data.db.send(GetProblemCatalogMessage {
         region: region,
         problems_per_page: problems_per_page,
     }).await;

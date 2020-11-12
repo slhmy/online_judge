@@ -1,8 +1,10 @@
 mod schema;
 mod service;
+mod judge_manager;
 mod database;
 mod user;
 mod problem;
+mod status;
 mod graphql;
 mod judge_server;
 mod utils;
@@ -22,7 +24,7 @@ extern crate pretty_env_logger;
 use std::{
     io,
     sync::RwLock,
-    collections::{ BTreeMap, HashMap },
+    collections::{ BTreeMap, HashMap, VecDeque },
     time::SystemTime,
 };
 use regex::Regex;
@@ -40,12 +42,15 @@ use actix_cors::Cors;
 use crate::{
     graphql::schema as graphql_schema,
     database::*,
+    judge_manager::*,
     judge_server::model::JudgeServerInfo,
 };
 use dotenv::dotenv;
 use std::env;
+use uuid::Uuid;
 
 lazy_static! {
+    static ref  WAITING_QUEUE: RwLock<VecDeque::<Uuid>> = RwLock::new(VecDeque::new());
     static ref ACCESS_KEY_ID: String = {
         dotenv().ok();
         env::var("ACCESS_KEY_ID").expect("ACCESS_KEY_ID must be set")
@@ -71,7 +76,8 @@ async fn main() -> io::Result<()> {
     env_logger::init();
 
     // Create schema
-    let addr = create_db_executor();
+    let db_addr = create_db_executor();
+    let jm_addr = create_judge_manager();
 
     // Create Juniper schema
     let graphql_schema = std::sync::Arc::new(graphql_schema::create_schema());
@@ -79,7 +85,8 @@ async fn main() -> io::Result<()> {
     // Start http server
     HttpServer::new(move || {
         App::new()
-            .data(State { db: addr.clone() })
+            .data(DBState { db: db_addr.clone() })
+            .data(JMState { jm: jm_addr.clone() })
             .data(graphql_schema.clone())
             .wrap(
                 Cors::new() // <- Construct CORS middleware builder
@@ -100,6 +107,7 @@ async fn main() -> io::Result<()> {
             .configure(user::route)
             .configure(problem::route)
             .configure(judge_server::route)
+            .configure(status::route)
     })
     .bind("0.0.0.0:8080")?
     .run()

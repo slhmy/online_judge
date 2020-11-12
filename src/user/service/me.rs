@@ -7,7 +7,7 @@ use actix_web::{HttpResponse, web};
 use actix_identity::Identity;
 
 pub async fn me (
-    data: web::Data<State>,
+    data: web::Data<DBState>,
     id: Identity,
 ) -> HttpResponse {
     if let Some(user_id) = id.identity() {

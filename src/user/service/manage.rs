@@ -142,7 +142,7 @@ pub struct UserChangeRequest {
 }
 
 pub async fn change_info(
-    data: web::Data<State>,
+    data: web::Data<DBState>,
     form: web::Form<UserChangeRequest>,
     id: Identity,
 ) -> HttpResponse {
@@ -233,7 +233,7 @@ pub struct UserDeleteRequest{
 }
 
 pub async fn delete_user(
-    data: web::Data<State>,
+    data: web::Data<DBState>,
     form: web::Form<UserDeleteRequest>,
     id: Identity,
 ) -> HttpResponse {
@@ -319,7 +319,7 @@ pub async fn delete_user(
 }
 
 pub async fn get_all_users(
-    data: web::Data<State>,
+    data: web::Data<DBState>,
     id: Identity,
 ) -> HttpResponse {
     let res;

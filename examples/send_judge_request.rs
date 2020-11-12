@@ -4,6 +4,7 @@ use actix_web::client::Client;
 use actix_http::Error;
 use std::io;
 use std::str; 
+use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompileConfig {
@@ -75,12 +76,14 @@ async fn main() -> Result<(), Error> {
     let mut judge_setting_string = String::new();
     stdin.read_line(&mut judge_setting_string)?;
     let judge_setting: JudgeSetting = serde_json::from_str(&judge_setting_string.trim())?;
+    let time_out = (judge_setting.max_cpu_time / 1000 + 5) as u64;
 
     // Create request builder, configure request and send
     let mut response = Client::new()
         .post("http://127.0.0.1:12358/judge")
         .set_header("X-Judge-Server-Token", token.trim())
         .set_header("Content-Type", "application/json")
+        .timeout(Duration::new(time_out, 0))
         .send_json(&judge_setting)
         .await?;
 

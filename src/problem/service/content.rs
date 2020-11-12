@@ -63,6 +63,7 @@ impl From<Problem> for OutProblem {
             default_max_memory,
             test_case: _,
             max_score,
+            ..
         } = problem;
 
         let examples = 
@@ -131,7 +132,7 @@ impl Handler<GetProblemMessage> for DbExecutor {
 
 
 pub async fn get_problem(
-    data: web::Data<State>,
+    data: web::Data<DBState>,
     id: i32,
     region: String,
     _id: Identity,

@@ -18,6 +18,7 @@ table! {
         default_max_memory -> Int4,
         test_case -> Nullable<Text>,
         max_score -> Int4,
+        opaque_output -> Bool,
     }
 }
 
@@ -30,9 +31,14 @@ table! {
         state -> Text,
         judge_type -> Text,
         result -> Nullable<Text>,
-        score -> Nullable<Int4>,
+        score -> Nullable<Float8>,
         setting_data -> Text,
         result_data -> Nullable<Text>,
+        err_reason -> Nullable<Text>,
+        submit_time -> Nullable<Timestamp>,
+        start_pend_time -> Nullable<Timestamp>,
+        finish_time -> Nullable<Timestamp>,
+        language -> Text,
     }
 }
 

@@ -18,4 +18,5 @@ pub struct Problem {
     pub default_max_memory: i32,
     pub test_case: Option<String>,
     pub max_score: i32,
+    pub opaque_output: bool,
 }

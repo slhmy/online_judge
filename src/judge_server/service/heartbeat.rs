@@ -32,8 +32,17 @@ pub async fn handle_heartbeat(
         .to_str().unwrap().to_string();
 
     if !info.service_url.is_none()
-    {
+    {        
         let service_url = info.service_url.clone().unwrap();
+        let (is_deprecated, task_number) = 
+        {
+            let lock = JUDGE_SERVER_INFOS.read().unwrap();
+            if lock.get(&service_url).is_none() { (false, 0) } 
+            else { 
+                let target = lock.get(&service_url).unwrap();
+                (target.is_deprecated, target.task_number)
+            }
+        };
         let now = SystemTime::now();
         let judge_server_info = JudgeServerInfo {
             judger_version: info.judger_version.clone(),
@@ -41,9 +50,11 @@ pub async fn handle_heartbeat(
             cpu_core: info.cpu_core,
             memory: info.memory,
             cpu: info.cpu,
+            task_number: task_number,
             service_url: service_url,
             token: token.clone(),
             heartbeat_time: now,
+            is_deprecated: is_deprecated,
         };
         let mut lock = JUDGE_SERVER_INFOS.write().unwrap();
         lock.insert(info.service_url.clone().unwrap(), judge_server_info);

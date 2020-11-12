@@ -2,3 +2,4 @@
 /data/run
 /data/log
 .env
+.vscode

@@ -6,6 +6,7 @@ use diesel::prelude::*;
 use actix::prelude::*;
 use actix_web::web;
 use actix_identity::Identity;
+use std::time::Duration;
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct TestCaseResult {
@@ -31,15 +32,16 @@ pub struct OutJudgeResult {
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct ProblemSetting {
-    default_max_cpu_time: i32,
-    default_max_memory: i32,
-    is_spj: bool,
+    pub default_max_cpu_time: i32,
+    pub default_max_memory: i32,
+    pub is_spj: bool,
+    pub opaque_output: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GetSettingMessage {
-    region: String,
-    problem_id: i32,
+    pub region: String,
+    pub problem_id: i32,
 }
 
 impl Message for GetSettingMessage {
@@ -53,11 +55,11 @@ impl Handler<GetSettingMessage> for DbExecutor {
         use crate::schema::problems::dsl::*;
         use crate::schema::test_cases::dsl::*;
 
-        let (default_max_cpu_time_val, default_max_memory_val, test_case_name) = problems
+        let (default_max_cpu_time_val, default_max_memory_val, test_case_name, opaque_output_val) = problems
             .filter(region.eq(msg.region))
             .filter(id.eq(msg.problem_id))
-            .select( (default_max_cpu_time, default_max_memory, test_case) )
-            .first::<(i32, i32, Option<String>)>(&self.0)
+            .select( (default_max_cpu_time, default_max_memory, test_case, opaque_output) )
+            .first::<(i32, i32, Option<String>, bool)>(&self.0)
             .expect("Error loading problem setting.");
 
         info!("{:?}", test_case_name);
@@ -71,6 +73,7 @@ impl Handler<GetSettingMessage> for DbExecutor {
             default_max_cpu_time: default_max_cpu_time_val,
             default_max_memory: default_max_memory_val,
             is_spj: is_spj_val,
+            opaque_output: opaque_output_val,
         })
     }
 }
@@ -86,50 +89,38 @@ async fn get_judge_result(
     judge_type: String,
     output: bool,
 ) -> Result<OutJudgeResult, String> {
-    use crate::judge_server:: { model::*, config::*, utils::mapper::*, utils::chooser::* };
+    use crate::judge_server::utils::{
+        builder::get_judge_setting,
+    };
+    use crate::judge_server:: { model::*, utils::mapper::*, utils::chooser::* };
     use actix_web::client::Client;
-    use std::fs::File;
-    use std::io::prelude::*;
     use std::str;    
 
     let judge_server = choose_judge_server();
     if judge_server.is_none() { return Err("No judge server is online".to_owned()); }
     let (url, token) = judge_server.unwrap();
 
-    let mut spj_version: Option<String> = None;
-    let mut spj_config: Option<SpjConfig> = None;
-    let mut spj_compile_config: Option<SpjCompileConfig> = None;
-    let mut spj_src: Option<String> = None;
-    let test_case = region + "_" + &problem_id.to_string();
-    if is_spj {
-        spj_version = Some("1".to_owned());
-        spj_config = Some(c_lang_spj_config());
-        spj_compile_config = Some(c_lang_spj_compile());
-
-        let mut file = File::open("data/test_case/".to_owned() + &test_case +"/spj_src.c").expect("Error opening spj src");
-        let mut contents = String::new();
-        file.read_to_string(&mut contents).expect("Error reading spj src");
-        spj_src = Some(contents);
-    }
-   
-    let judge_setting = JudgeSetting {
-        language_config: get_lang_config(&language),
-        src: src,
-        max_cpu_time: max_cpu_time,
-        max_memory: max_memory,
-        test_case_id: Some(test_case),
-        test_case: None,
-        spj_version: spj_version,
-        spj_config: spj_config,
-        spj_compile_config: spj_compile_config,
-        spj_src: spj_src,
-        output: output,
+    let judge_setting = {
+        match get_judge_setting(
+            region,
+            problem_id,
+            language,
+            src,
+            is_spj,
+            max_cpu_time,
+            max_memory,
+            output,
+        ) {
+            Err(msg) => { return Err(msg); }
+            Ok(judge_setting) => judge_setting
+        }
     };
 
     let mut response = Client::new()
         .post(url + "/judge")
         .set_header("X-Judge-Server-Token", token)
         .set_header("Content-Type", "application/json")
+        .timeout(Duration::new(30, 0))
         .send_json(&judge_setting)
         .await.expect("Error sending judge msg to judge server.");
     let result_vec = response.body().await.expect("Error getting response body.").to_vec();
@@ -197,7 +188,7 @@ pub struct JudgeRequestForm {
 }
 
 pub async fn judge(
-    data: web::Data<State>,
+    data: web::Data<DBState>,
     problem_id: i32,
     region: String,
     src: String,

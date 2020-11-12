@@ -23,6 +23,7 @@ pub struct ProblemPreview {
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct StatusCatalogElement {
     pub id: Uuid,
+    pub region: String,
     pub owner: OwnerPreview,
     pub problem: ProblemPreview,
     pub language: String,
@@ -40,7 +41,7 @@ pub struct StatusCatalog {
 
 #[derive(Debug, Clone, Deserialize)]
 pub struct GetStatusCatalogMessage {
-    pub region: String,
+    pub region: Option<String>,
     pub count_per_page: i32,
     pub problem_id: Option<i32>,
     pub problem_title: Option<String>,
@@ -66,13 +67,14 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
         };
 
         let count_star = status::table
-            .filter(status::problem_region.eq(msg.region.clone()))
+            .filter(status::problem_region.nullable().eq(msg.region.clone()).or(msg.region.is_none()))
             .filter(status::problem_id.nullable().eq(msg.problem_id).or(msg.problem_id.is_none()))
             .filter(status::owner_id.nullable().eq(msg.user_id).or(msg.user_id.is_none()))
             .filter(status::language.ilike(
                 "%".to_owned() + &msg.language.clone().unwrap_or("".to_owned()) + "%"
             ).or(msg.language.is_none()))
             .inner_join(problems::table.on(status::problem_id.eq(problems::id)
+                .and(status::problem_region.eq(problems::region))
                 .and(problems::title.ilike(
                     "%".to_owned() + &msg.problem_title.clone().unwrap_or("".to_owned()) + "%"
                 ).or(msg.problem_title.is_none()))))
@@ -85,13 +87,14 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
             .expect("Error counting status.");
 
         let status_vec = status::table
-            .filter(status::problem_region.eq(msg.region.clone()))
+            .filter(status::problem_region.nullable().eq(msg.region.clone()).or(msg.region.is_none()))
             .filter(status::problem_id.nullable().eq(msg.problem_id).or(msg.problem_id.is_none()))
             .filter(status::owner_id.nullable().eq(msg.user_id).or(msg.user_id.is_none()))
             .filter(status::language.ilike(
                 "%".to_owned() + &msg.language.clone().unwrap_or("".to_owned()) + "%"
             ).or(msg.language.is_none()))
             .inner_join(problems::table.on(status::problem_id.eq(problems::id)
+                .and(status::problem_region.eq(problems::region))
                 .and(problems::title.ilike(
                     "%".to_owned() + &msg.problem_title.clone().unwrap_or("".to_owned()) + "%"
                 ).or(msg.problem_title.is_none()))))
@@ -101,6 +104,7 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
                 ).or(msg.username.is_none()))))
             .select((
                 status::id,
+                status::problem_region,
                 status::problem_id,
                 problems::title,
                 status::owner_id,
@@ -115,6 +119,7 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
             .limit(msg.count_per_page as i64)
             .load::<(
                 Uuid,
+                String,
                 i32,
                 String,
                 i32,
@@ -134,6 +139,7 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
 
         for (
             t_id,
+            t_problem_region,
             t_problem_id,
             t_problem_title,
             t_owner_id,
@@ -146,6 +152,7 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
         ) in status_vec {
             catalog.elements.push(StatusCatalogElement{
                 id: t_id,
+                region: t_problem_region,
                 owner: OwnerPreview {
                     id: t_owner_id,
                     username: t_username,
@@ -168,7 +175,7 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
 
 pub async fn get_status_catalog_service(
     data: web::Data<DBState>,
-    region: String,
+    region: Option<String>,
     count_per_page: i32,
     problem_id: Option<i32>,
     problem_title: Option<String>,

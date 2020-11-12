@@ -77,7 +77,7 @@ impl QueryRoot {
 
     fn status_catalog(
         context: &Context,
-        region: String,
+        region: Option<String>,
         count_per_page: i32,
         problem_id: Option<i32>,
         problem_title: Option<String>,

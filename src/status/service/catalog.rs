@@ -32,9 +32,9 @@ pub struct StatusCatalogElement {
     pub judge_type: String,
     pub result: Option<String>,
     pub score: Option<f64>,
-    pub submit_time: NaiveDateTime,
-    pub start_pend_time: Option<NaiveDateTime>,
-    pub finish_time: Option<NaiveDateTime>,
+    pub submit_time: String,
+    pub start_pend_time: Option<String>,
+    pub finish_time: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
@@ -180,9 +180,9 @@ impl Handler<GetStatusCatalogMessage> for DbExecutor {
                 judge_type: t_judge_type,
                 result: t_result,
                 score: t_score,
-                submit_time: t_submit_time,
-                start_pend_time: t_start_pend_time,
-                finish_time: t_finish_time,
+                submit_time: t_submit_time.to_string(),
+                start_pend_time: if t_start_pend_time.is_none() { None } else { Some(t_start_pend_time.unwrap().to_string()) },
+                finish_time: if t_finish_time.is_none() { None } else { Some(t_finish_time.unwrap().to_string()) },
             });
         }
 

@@ -4,7 +4,7 @@ pub mod model;
 
 use diesel::prelude::*;
 use actix::prelude::*;
-use crate::DATABASE_URL;
+use crate::statics::DATABASE_URL;
 
 pub struct JudgeManager(pub PgConnection);
 

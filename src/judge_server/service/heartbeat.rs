@@ -4,7 +4,7 @@ use actix_web::{
     HttpRequest,
     HttpResponse, 
 };
-use crate::JUDGE_SERVER_INFOS;
+use crate::statics::JUDGE_SERVER_INFOS;
 use crate::judge_server::model::JudgeServerInfo;
 use std::time::SystemTime;
 

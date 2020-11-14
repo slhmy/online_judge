@@ -6,7 +6,7 @@ use std::collections::BTreeMap;
 use uuid::Uuid;
 use percent_encoding::{utf8_percent_encode, AsciiSet,CONTROLS};
 use rand::{thread_rng, Rng};
-use crate::{ ACCESS_KEY_ID, ACCESS_SECRET };
+use crate::statics::{ ACCESS_KEY_ID, ACCESS_SECRET };
 
 const FRAGMENT: &AsciiSet = &CONTROLS
         .add(b' ')

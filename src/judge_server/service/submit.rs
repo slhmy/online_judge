@@ -3,7 +3,7 @@ use crate::{
     judge_manager::*,
     judge_manager::handler::StartJudge,
     errors::{ServiceError, ServiceResult},
-    WAITING_QUEUE,
+    statics::WAITING_QUEUE,
     utils::time::get_cur_naive_date_time,
 };
 use diesel::prelude::*;

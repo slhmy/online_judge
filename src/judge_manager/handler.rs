@@ -1,7 +1,7 @@
 use actix::prelude::*;
 use diesel::prelude::*;
-use crate::JUDGE_SERVER_INFOS;
-use crate::WAITING_QUEUE;
+use crate::statics::JUDGE_SERVER_INFOS;
+use crate::statics::WAITING_QUEUE;
 use crate::JudgeManager;
 use crate::judge_manager::utils::{ 
     chooser::choose_judge_server,

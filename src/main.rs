@@ -9,6 +9,7 @@ mod graphql;
 mod judge_server;
 mod utils;
 mod errors;
+mod statics;
 
 #[macro_use] extern crate log;
 #[macro_use] extern crate diesel;
@@ -21,14 +22,8 @@ extern crate env_logger;
 extern crate serde_json;
 extern crate pretty_env_logger;
 
-use std::{
-    io,
-    sync::RwLock,
-    collections::{ BTreeMap, HashMap, VecDeque },
-    time::SystemTime,
-};
-use regex::Regex;
-use time::Duration;
+
+
 use actix_web::{ 
     App,
     middleware, 
@@ -43,32 +38,9 @@ use crate::{
     graphql::schema as graphql_schema,
     database::*,
     judge_manager::*,
-    judge_server::model::JudgeServerInfo,
 };
-use dotenv::dotenv;
-use std::env;
-use uuid::Uuid;
-
-lazy_static! {
-    static ref  WAITING_QUEUE: RwLock<VecDeque::<Uuid>> = RwLock::new(VecDeque::new());
-    static ref ACCESS_KEY_ID: String = {
-        dotenv().ok();
-        env::var("ACCESS_KEY_ID").expect("ACCESS_KEY_ID must be set")
-    };
-    static ref ACCESS_SECRET: String = {
-        dotenv().ok();
-        env::var("ACCESS_SECRET").expect("ACCESS_SECRET must be set")
-    };
-    static ref DATABASE_URL: String = {
-        dotenv().ok();
-        env::var("DATABASE_URL").expect("DATABASE_URL must be set")  
-    };
-    static ref JUDGE_SERVER_INFOS: RwLock<HashMap<String, JudgeServerInfo>> = RwLock::new(HashMap::new());
-    static ref VERIFICATION_MAP: RwLock<BTreeMap<String, (String, SystemTime)>> = RwLock::new(BTreeMap::new());
-    static ref RE_EMAIL: Regex = Regex::new(r"^\w+([-+.]\w+)*@\w+([-.]\w+)*\.\w+([-.]\w+)*$").unwrap();
-    static ref RE_MOBILE: Regex = Regex::new(r"^((13[0-9])|(14[5|7])|(15([0-3]|[5-9]))|(18[0,5-9]))\d{8}$").unwrap();
-    static ref RE_PASSWORD: Regex = Regex::new(r"^\S{6,20}$").unwrap();
-}
+use time::Duration;
+use std::io;
 
 #[actix_web::main]
 async fn main() -> io::Result<()> {

@@ -4,7 +4,7 @@ pub trait RegexMatcher {
     fn is_password(&self) -> bool;
 }
 
-use crate::*;
+use crate::statics::{ RE_EMAIL, RE_MOBILE, RE_PASSWORD };
 impl RegexMatcher for String{
     fn is_email(&self) -> bool { RE_EMAIL.is_match(&self) }
     fn is_mobile(&self) -> bool { RE_MOBILE.is_match(&self) }

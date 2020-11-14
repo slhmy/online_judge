@@ -3,7 +3,7 @@ use crate::{
     judge_server::model::JudgeServerInfo,
 };
 use actix_identity::Identity;
-use crate::JUDGE_SERVER_INFOS;
+use crate::statics::JUDGE_SERVER_INFOS;
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct OutJudgeServerInfo {

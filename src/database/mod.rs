@@ -1,6 +1,6 @@
 use diesel::prelude::*;
 use actix::prelude::*;
-use crate::DATABASE_URL;
+use crate::statics::DATABASE_URL;
 
 pub struct DbExecutor(pub PgConnection);
 

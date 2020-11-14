@@ -1,5 +1,5 @@
 use crate::{
-    *,
+    statics::VERIFICATION_MAP,
     database::*,
     user::{
         model::*,

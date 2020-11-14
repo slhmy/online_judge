@@ -1,4 +1,4 @@
-use crate::JUDGE_SERVER_INFOS;
+use crate::statics::JUDGE_SERVER_INFOS;
 
 pub fn choose_judge_server() -> Option<(String, String)> {
     let lock = JUDGE_SERVER_INFOS.read().unwrap();

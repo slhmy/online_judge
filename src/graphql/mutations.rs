@@ -14,6 +14,7 @@ use crate::contest::{
 use crate::problem::{
     service::{
         new::{ new_problem_service, NewProblemMessage },
+        update::{ update_problem_service, UpdateProblemMessage },
     },
     model::{ OutProblem },
 };
@@ -130,6 +131,53 @@ impl MutationRoot {
                 test_case: test_case,
                 max_score: max_score,
                 opaque_output: opaque_output,
+            },
+            context.id.clone(),
+        ))
+    }
+
+    fn update_problem(
+        context: &Context,
+        id: i32,
+        region: String,
+        new_id: Option<i32>,
+        new_title: Option<String>,
+        new_description: Option<String>,
+        new_input_explain: Option<String>,
+        new_output_explain: Option<String>,
+        new_input_examples: Option<Vec<String>>,
+        new_output_examples: Option<Vec<String>>,
+        new_hint: Option<String>,
+        new_tags: Option<Vec<String>>,
+        new_sources: Option<Vec<String>>,
+        new_difficulty: Option<String>,
+        new_default_max_cpu_time: Option<i32>,
+        new_default_max_memory: Option<i32>,
+        new_test_case: Option<String>,
+        new_max_score: Option<i32>,
+        new_opaque_output: Option<bool>,
+    ) -> ServiceResult<OutProblem> {
+        executor::block_on(update_problem_service(
+            context.db.clone(),
+            UpdateProblemMessage {
+                id: id,
+                region: region,
+                new_id: new_id,
+                new_title: new_title,
+                new_description: new_description,
+                new_input_explain: new_input_explain,
+                new_output_explain: new_output_explain,
+                new_input_examples: new_input_examples,
+                new_output_examples: new_output_examples,
+                new_hint: new_hint,
+                new_tags: new_tags,
+                new_sources: new_sources,
+                new_difficulty: new_difficulty,
+                new_default_max_cpu_time: new_default_max_cpu_time,
+                new_default_max_memory: new_default_max_memory,
+                new_test_case: new_test_case,
+                new_max_score: new_max_score,
+                new_opaque_output: new_opaque_output,
             },
             context.id.clone(),
         ))

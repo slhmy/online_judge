@@ -10,6 +10,9 @@ mod judge_server;
 mod utils;
 mod errors;
 mod statics;
+mod region;
+mod contest;
+mod test_case;
 
 #[macro_use] extern crate log;
 #[macro_use] extern crate diesel;
@@ -21,8 +24,6 @@ extern crate dotenv;
 extern crate env_logger;
 extern crate serde_json;
 extern crate pretty_env_logger;
-
-
 
 use actix_web::{ 
     App,
@@ -80,6 +81,9 @@ async fn main() -> io::Result<()> {
             .configure(problem::route)
             .configure(judge_server::route)
             .configure(status::route)
+            .configure(region::route)
+            .configure(contest::route)
+            .configure(test_case::route)
     })
     .bind("0.0.0.0:8080")?
     .run()

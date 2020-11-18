@@ -5,6 +5,8 @@ use crate::{
 };
 use actix_web::{HttpResponse, web};
 use actix_identity::Identity;
+use actix_web::Error;
+use futures::StreamExt;
 
 use super::service::{
     info::server_info,
@@ -42,4 +44,20 @@ pub async fn submit(
         form.output,
         id
     ).await.map(|res| HttpResponse::Ok().json(&res))
+}
+
+pub async fn get_file(mut body: web::Payload) -> Result<HttpResponse, Error> {
+    use std::fs::File;
+    use std::io::prelude::*;
+
+    let mut bytes = web::BytesMut::new();
+    while let Some(item) = body.next().await {
+        let item = item?;
+        println!("Chunk: {:?}", &item);
+        bytes.extend_from_slice(&item);
+    }
+    let mut file = File::create("foo.zip")?;
+    file.write_all(&bytes)?;
+
+    Ok(HttpResponse::Ok().finish())
 }

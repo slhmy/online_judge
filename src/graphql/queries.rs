@@ -14,15 +14,17 @@ use crate::service::{
 };
 
 use crate::{
-    problem::service::{
-        catalog::{
-            ProblemCatalog,
-            get_problem_catalog_service,
+    problem::{
+        model::OutProblem,
+        service::{
+            catalog::{
+                ProblemCatalog,
+                get_problem_catalog_service,
+            },
+            content::{ 
+                get_problem as get_problem_service,
+            }
         },
-        content::{
-            OutProblem, 
-            get_problem as get_problem_service,
-        }
     },
     judge_server::service::{
         info::{
@@ -34,6 +36,12 @@ use crate::{
         catalog::{
             StatusCatalog,
             get_status_catalog_service,
+        }
+    },
+    test_case::service::{
+        catalog::{
+            TestCaseCatalog,
+            get_test_case_catalog_service,
         }
     },
     errors::ServiceResult,
@@ -106,6 +114,13 @@ impl QueryRoot {
         problems_per_page: Option<i32>,
     ) -> ServiceResult<ProblemCatalog> {
         executor::block_on(get_problem_catalog_service(context.db.clone(), region.clone(), problems_per_page))
+    }
+
+    fn test_case_catalog(
+        context: &Context,
+        elements_per_page: Option<i32>,
+    ) -> ServiceResult<TestCaseCatalog> {
+        executor::block_on(get_test_case_catalog_service(context.db.clone(), elements_per_page, context.id.clone()))
     }
 
     fn judge_servers(

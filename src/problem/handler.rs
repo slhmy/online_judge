@@ -5,6 +5,7 @@ use crate::{
         catalog::get_problem_catalog_service,
         content::GetProblemMessage,
         content::get_problem as get_problem_service,
+        new:: { new_problem_service, NewProblemMessage },
     },
     errors::ServiceError,
 };
@@ -26,5 +27,14 @@ pub async fn get_problem(
     id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
     get_problem_service(data, form.id, form.region.clone(), id).await
+        .map(|res| HttpResponse::Ok().json(&res))
+}
+
+pub async fn new_problem(
+    data: web::Data<DBState>,
+    form: web::Form<NewProblemMessage>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    new_problem_service(data, form.to_owned(), id).await
         .map(|res| HttpResponse::Ok().json(&res))
 }

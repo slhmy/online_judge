@@ -3,6 +3,20 @@ pub struct MutationRoot;
 use futures::executor;
 use super::Context;
 use crate::judge_server::service::submit::{ submit_service, SubmitResult };
+use crate::region::service::new::NewRegionMessage;
+use crate::contest::{
+    service::{
+        new::{ new_contest_service, NewContestMessage },
+        register::register_service,
+    },
+    model::{ OutContest, RegisterInfo },
+};
+use crate::problem::{
+    service::{
+        new::{ new_problem_service, NewProblemMessage },
+    },
+    model::{ OutProblem },
+};
 use crate::errors::ServiceResult;
 
 #[juniper::object(Context = Context)]
@@ -28,5 +42,96 @@ impl MutationRoot {
             judge_type,
             output,
             context.id.clone()))
+    }
+
+    fn new_contest(
+        context: &Context,
+        region: String,
+        name: String, 
+        start_time: String,
+        end_time: String,
+        seal_before_end: Option<i32>,
+        register_end_time: Option<String>,
+        judge_type: String,
+        password: Option<String>,
+    ) -> ServiceResult<OutContest> {
+        executor::block_on(new_contest_service(
+            context.db.clone(),
+            NewRegionMessage {
+                name: region.clone(),
+                password: password,
+                self_type: "contest".to_owned(),
+                judge_type: judge_type,
+            },
+            NewContestMessage {
+                region: region,
+                name: name, 
+                start_time: start_time,
+                end_time: end_time,
+                seal_before_end: seal_before_end,
+                register_end_time: register_end_time,
+            },
+            context.id.clone(),
+        ))
+    }
+
+    fn register_contest(
+        context: &Context,
+        contest_region: String,
+        is_unrated: bool,
+        password: Option<String>,
+    ) -> ServiceResult<RegisterInfo> {
+        executor::block_on(register_service(
+            context.db.clone(),
+            contest_region,
+            is_unrated,
+            password,
+            context.id.clone(),
+        ))
+    }
+
+    fn new_problem(
+        context: &Context,
+        id: i32,
+        region: String,
+        title: String,
+        description: Option<String>,
+        input_explain: Option<String>,
+        output_explain: Option<String>,
+        input_examples: Option<Vec<String>>,
+        output_examples: Option<Vec<String>>,
+        hint: Option<String>,
+        tags: Option<Vec<String>>,
+        sources: Option<Vec<String>>,
+        difficulty: String,
+        default_max_cpu_time: i32,
+        default_max_memory: i32,
+        test_case: Option<String>,
+        max_score: i32,
+        opaque_output: bool,
+    ) -> ServiceResult<OutProblem> {
+        executor::block_on(new_problem_service(
+            context.db.clone(),
+            NewProblemMessage {
+                id: id,
+                region: region,
+                title: title,
+                description: description,
+                input_explain: input_explain,
+                output_explain: output_explain,
+                input_examples: input_examples,
+                output_examples: output_examples,
+                hint: hint,
+                tags: tags,
+                sources: sources,
+                difficulty: difficulty,
+                default_max_cpu_time: default_max_cpu_time,
+                default_max_memory: default_max_memory,
+                test_case: test_case,
+                max_score: max_score,
+                opaque_output: opaque_output,
+            },
+            context.id.clone(),
+        ))
     }
 }

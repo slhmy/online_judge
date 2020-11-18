@@ -18,5 +18,6 @@ pub fn route(cfg: &mut web::ServiceConfig) {
             //.service(web::resource("/ping").route(web::post().to(ping_judge_server)))
             .service(web::resource("/submit").route(web::post().to(submit)))
             .service(web::resource("/info").route(web::post().to(get_server_info)))
+            .service(web::resource("/get_file").route(web::get().to(get_file)))
     );
 }

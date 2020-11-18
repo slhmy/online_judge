@@ -10,5 +10,6 @@ pub fn route(cfg: &mut web::ServiceConfig) {
         web::scope("/problem")
             .service(web::resource("/get_catalog").route(web::post().to(get_problem_catalog)))
             .service(web::resource("/get_problem").route(web::post().to(get_problem)))
+            .service(web::resource("/new_problem").route(web::post().to(new_problem)))
     );
 }

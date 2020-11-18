@@ -5,6 +5,7 @@ use crate::{
     errors::{ServiceError, ServiceResult},
     statics::WAITING_QUEUE,
     utils::time::get_cur_naive_date_time,
+    region::service::info::GetRegionMessage,
 };
 use diesel::prelude::*;
 use actix::prelude::*;
@@ -137,6 +138,30 @@ pub async fn submit_service(
         return Err(ServiceError::BadRequest("JudgeType doesn't support.".to_owned()));
     }
 
+    // get region
+    let db_result = data.db.send(GetRegionMessage {
+        name: problem_region.clone(),
+    }).await;
+
+    let allow_judge_type = match db_result {
+        Err(_) => { return Err(ServiceError::InternalServerError); },
+        Ok(inner_result) => {
+            match inner_result {
+                Err(msg) => { return Err(ServiceError::BadRequest(msg)); },
+                Ok(region) => {
+                    region.judge_type
+                }
+            }
+        }
+    };
+
+    if allow_judge_type.is_some() {
+        if allow_judge_type.clone().unwrap() != judge_type {
+            let msg = format!("Region only allow judge_type \"{}\"", allow_judge_type.unwrap());
+            return Err(ServiceError::BadRequest(msg));
+        }
+    }
+
     let cur_id = id.identity().unwrap();
     id.remember(cur_id.clone());
 
@@ -157,6 +182,7 @@ pub async fn submit_service(
                     let (max_cpu_time, max_memory) = setting_filter(&language, default_max_cpu_time, default_max_memory);
                     let submittion_id = Uuid::new_v4();
                     match get_judge_setting(
+                        data.clone(),
                         problem_region.clone(),
                         problem_id,
                         language.clone(),
@@ -165,7 +191,7 @@ pub async fn submit_service(
                         max_cpu_time,
                         max_memory,
                         problem_setting.opaque_output || output,
-                    ) {
+                    ).await {
                         Err(msg) => Err(ServiceError::BadRequest(msg)),
                         Ok(judge_setting) => {
                             let db_result = data.db.send(SubmitStatusMessage {

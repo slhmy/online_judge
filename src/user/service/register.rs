@@ -25,7 +25,7 @@ struct InsertableUser {
     salt: String,
     role: String,
     job_number: Option<String>,
-    pub hash:Vec<u8>,
+    hash: Vec<u8>,
 }
 
 impl Message for ResgisterMessage {
@@ -110,7 +110,7 @@ pub async fn register(
                 result_cn: None,
                 msg_cn: None,
             }),
-        Ok(handler_result) => { 
+        Ok(handler_result) => {
             match handler_result {
                 Err(msg) => HttpResponse::BadRequest().json(
                     OperationResult {

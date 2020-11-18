@@ -1,4 +1,25 @@
 table! {
+    contest_register_lists (contest_region, user_id) {
+        contest_region -> Text,
+        user_id -> Int4,
+        is_unrated -> Bool,
+    }
+}
+
+table! {
+    contests (region) {
+        region -> Text,
+        name -> Text,
+        state -> Text,
+        start_time -> Timestamp,
+        end_time -> Timestamp,
+        seal_before_end -> Nullable<Int4>,
+        register_end_time -> Timestamp,
+        final_rank -> Nullable<Text>,
+    }
+}
+
+table! {
     problems (region, id) {
         id -> Int4,
         region -> Text,
@@ -19,6 +40,17 @@ table! {
         test_case -> Nullable<Text>,
         max_score -> Int4,
         opaque_output -> Bool,
+    }
+}
+
+table! {
+    regions (name) {
+        name -> Text,
+        need_pass -> Bool,
+        salt -> Nullable<Varchar>,
+        hash -> Nullable<Bytea>,
+        self_type -> Text,
+        judge_type -> Nullable<Text>,
     }
 }
 
@@ -64,11 +96,18 @@ table! {
     }
 }
 
+joinable!(contest_register_lists -> contests (contest_region));
+joinable!(contest_register_lists -> users (user_id));
+joinable!(problems -> regions (region));
 joinable!(problems -> test_cases (test_case));
+joinable!(status -> regions (problem_region));
 joinable!(status -> users (owner_id));
 
 allow_tables_to_appear_in_same_query!(
+    contest_register_lists,
+    contests,
     problems,
+    regions,
     status,
     test_cases,
     users,

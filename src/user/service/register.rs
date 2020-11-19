@@ -10,11 +10,14 @@ use crate::{
         role_filter::customize_role,
         regex_matcher::RegexMatcher,
         operation_result::OperationResult,
-    }
+    },
+    errors::ServiceError,
 };
 use diesel::prelude::*;
 use actix::prelude::*;
 use actix_web::{HttpResponse, web, Responder};
+use futures::StreamExt;
+use rand::{thread_rng, Rng};
 
 #[derive(Debug, Clone, Deserialize, Insertable, Queryable)]
 #[table_name = "users"]
@@ -69,6 +72,58 @@ impl Handler<ResgisterMessage> for DbExecutor {
             Ok(user) => Ok(OutUser::from(user)),
         }
     }
+}
+
+pub async fn auto_register(
+    data: web::Data<DBState>,
+    mut body: web::Payload
+) -> Result<HttpResponse, ServiceError> {
+    let mut bytes = web::BytesMut::new();
+    while let Some(item) = body.next().await {
+        let item = match item {
+            Ok(item) => item,
+            Err(_) => { return Err(ServiceError::BadRequest("Error while getting file.".to_owned())); },
+        };
+        bytes.extend_from_slice(&item);
+    }
+    let mut count = 0;
+    let mut rdr = csv::Reader::from_reader(&*bytes);
+    for result in rdr.records() {
+        let record = match result {
+            Ok(result) => result,
+            Err(_) => { return Err(ServiceError::BadRequest("Error while reading csv.".to_owned())); },
+        };
+        for elements in record.iter() {
+            if elements.to_owned().is_mobile() {
+                info!("Registering {}", elements);
+                let mut rng = thread_rng();
+                let result = data.db
+                    .send(ResgisterMessage {
+                        username: elements.to_owned(),
+                        email: None,
+                        mobile: Some(elements.to_owned()),
+                        password: rng.gen_range(100000, 999999).to_string(),
+                        role: "student".to_owned(),
+                        job_number: None,
+                    })
+                    .await;
+
+                match result {
+                    Ok(inner_result) => {
+                        match inner_result {
+                            Ok(_) => { count += 1; },
+                            Err(_) => {}
+                        }
+                    },
+                    Err(_) => {}
+                }
+
+                break;
+            }
+        }
+    }
+
+    Ok(HttpResponse::Ok().body(count.to_string()))
 }
 
 pub async fn register(

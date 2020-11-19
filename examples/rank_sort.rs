@@ -38,7 +38,7 @@ fn main() {
         }
     ];
 
-    let mut slice = rank_columes.as_mut_slice();
+    let slice = rank_columes.as_mut_slice();
     slice.sort_by(|colume_a, colume_b| {
         if colume_a.total_accepted != colume_b.total_accepted {
             colume_a.total_accepted.cmp(&colume_b.total_accepted).reverse()

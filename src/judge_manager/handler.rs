@@ -2,6 +2,7 @@ use actix::prelude::*;
 use diesel::prelude::*;
 use crate::statics::JUDGE_SERVER_INFOS;
 use crate::statics::WAITING_QUEUE;
+use crate::status::model::*;
 use crate::JudgeManager;
 use crate::judge_manager::utils::{ 
     chooser::choose_judge_server,
@@ -22,6 +23,7 @@ impl Handler<StartJudge> for JudgeManager {
     
     fn handle(&mut self, _msg: StartJudge, _: &mut Self::Context) -> Self::Result {
         use crate::schema::status;
+        use crate::schema::problems;
 
         let mut queue_size = {
             let lock = WAITING_QUEUE.read().unwrap();
@@ -81,13 +83,29 @@ impl Handler<StartJudge> for JudgeManager {
                 diesel::update(target)
                     .set((
                         status::state.eq("Finished".to_owned()),
-                        status::result.eq(op_result),
+                        status::result.eq(op_result.clone()),
                         status::score.eq(op_score),
                         status::result_data.eq(Some(result_string)),
                         status::err_reason.eq(op_err_reason),
                         status::finish_time.eq(Some(get_cur_naive_date_time())),
                     ))
                     .execute(&self.0).expect("Error changing status's data.");
+
+                let result = status::table.filter(status::id.eq(task_uuid))    
+                    .first::<Status>(&self.0).expect("Error changing status's data.");
+                
+                let target = problems::table
+                    .filter(problems::region.eq(result.problem_region))
+                    .filter(problems::id.eq(result.problem_id));
+                
+                diesel::update(target)
+                    .set((
+                        problems::submit_times.eq(problems::submit_times + if op_result.clone().is_some() { 1 } else { 0 }),
+                        problems::accept_times.eq(problems::accept_times + if op_result.clone().is_some() { 
+                            if op_result.unwrap() == "Accepted".to_owned() { 1 } else { 0 }
+                        } else { 0 } )
+                    ))
+                    .execute(&self.0).expect("Error changing problem's data.");
             }
 
             queue_size = {

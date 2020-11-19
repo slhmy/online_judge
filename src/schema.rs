@@ -78,6 +78,7 @@ table! {
     test_cases (name) {
         name -> Text,
         is_spj -> Bool,
+        count -> Int4,
     }
 }
 

@@ -18,6 +18,7 @@ pub struct RelatedProblem {
 pub struct TestCaseCatalogElement {
     pub name: String,
     pub is_spj: bool,
+    pub count: i32,
     pub related_problems: Vec<RelatedProblem>,
 }
 
@@ -67,6 +68,7 @@ impl Handler<GetTestCaseCatalogMessage> for DbExecutor {
                 TestCaseCatalogElement {
                     name: test_case.name.clone(),
                     is_spj: test_case.is_spj,
+                    count: test_case.count,
                     related_problems: {
                         let result = problems::table.filter(problems::test_case.nullable().eq(test_case.name))
                             .select((problems::region, problems::id, problems::title))

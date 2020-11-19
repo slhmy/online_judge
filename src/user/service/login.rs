@@ -120,42 +120,45 @@ pub async fn get_verification_code(
         .await;
     info!("Url: {}", url);
     info!("Response: {:?}", response);
-    match response {
-        Ok(response) => {
-            match response.status() {
-                StatusCode::OK => {
-                    let mut lock = VERIFICATION_MAP.write().unwrap();
-                    lock.insert(form.mobile.clone(), (code, SystemTime::now()));
-                    info!{"{}:{}", form.mobile.clone(), lock.get(&form.mobile.clone()).unwrap().0}
-                    HttpResponse::Ok().json(
-                        OperationResult {
-                            result_en: Some("success".to_owned()),
-                            msg_en: Some("Verification code send successfully.".to_owned()),
-                            result_cn: None,
-                            msg_cn: None,
-                        })
-                },
-                _ => {
-                    HttpResponse::InternalServerError().json(
-                        OperationResult {
-                            result_en: Some("error".to_owned()),
-                            msg_en: Some("Error occured in sms server. Maybe your mobile is incorrect.".to_owned()),
-                            result_cn: None,
-                            msg_cn: None,
-                        })
+    let max_try_times = 3;
+    for _ in 0..max_try_times {
+        match response {
+            Ok(response) => {
+                match response.status() {
+                    StatusCode::OK => {
+                        let mut lock = VERIFICATION_MAP.write().unwrap();
+                        lock.insert(form.mobile.clone(), (code, SystemTime::now()));
+                        info!{"{}:{}", form.mobile.clone(), lock.get(&form.mobile.clone()).unwrap().0}
+                        return HttpResponse::Ok().json(
+                            OperationResult {
+                                result_en: Some("success".to_owned()),
+                                msg_en: Some("Verification code send successfully.".to_owned()),
+                                result_cn: None,
+                                msg_cn: None,
+                            })
+                    },
+                    _ => {
+                        return HttpResponse::InternalServerError().json(
+                            OperationResult {
+                                result_en: Some("error".to_owned()),
+                                msg_en: Some("Error occured in sms server. Maybe your mobile is incorrect.".to_owned()),
+                                result_cn: None,
+                                msg_cn: None,
+                            })
+                    }
                 }
-            }
-        },
-        Err(_) => {
-            HttpResponse::InternalServerError().json(
-                OperationResult {
-                    result_en: Some("unexpected error".to_owned()),
-                    msg_en: Some("Error occured in sms server. Please retry.".to_owned()),
-                    result_cn: None,
-                    msg_cn: None,
-                })
+            },
+            Err(_) => {}
         }
     }
+
+    HttpResponse::InternalServerError().json(
+        OperationResult {
+            result_en: Some("unexpected error".to_owned()),
+            msg_en: Some("Error occured in sms server. Please retry.".to_owned()),
+            result_cn: None,
+            msg_cn: None,
+        })
 }
 
 #[derive(Debug, Clone, Deserialize)]

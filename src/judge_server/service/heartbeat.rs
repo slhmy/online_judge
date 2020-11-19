@@ -7,6 +7,8 @@ use actix_web::{
 use crate::statics::JUDGE_SERVER_INFOS;
 use crate::judge_server::model::JudgeServerInfo;
 use std::time::SystemTime;
+use crate::judge_manager::*;
+use crate::judge_manager::handler::StartJudge;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct HeartbeatResquest {
@@ -25,6 +27,7 @@ struct HeartbeatResponse {
 }
 
 pub async fn handle_heartbeat(
+    judge_manager: web::Data<JMState>,
     req: HttpRequest, 
     info: web::Json<HeartbeatResquest>
 ) -> impl Responder {
@@ -58,6 +61,10 @@ pub async fn handle_heartbeat(
         };
         let mut lock = JUDGE_SERVER_INFOS.write().unwrap();
         lock.insert(info.service_url.clone().unwrap(), judge_server_info);
+
+        if !is_deprecated {
+            judge_manager.jm.do_send(StartJudge());
+        }
     }
    
     HttpResponse::Ok()

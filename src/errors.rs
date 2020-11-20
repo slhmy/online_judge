@@ -17,6 +17,9 @@ pub enum ServiceError {
     #[error("Unauthorized")]
     Unauthorized,
 
+    #[error("Not logined")]
+    NotLogined,
+
     #[error("Unable to connect to DB")]
     UnableToConnectToDb,
 }
@@ -28,6 +31,12 @@ impl juniper::IntoFieldError for ServiceError {
                 "Unauthorized",
                 graphql_value!({
                     "type": "NO_ACCESS"
+                }),
+            ),
+            ServiceError::NotLogined => juniper::FieldError::new(
+                "Unauthorized",
+                graphql_value!({
+                    "type": "NOT_LOGINED"
                 }),
             ),
             ServiceError::BadRequest(s) => juniper::FieldError::new(
@@ -63,6 +72,7 @@ impl ResponseError for ServiceError {
                 .json("Unable to connect to DB, Please try later"),
             ServiceError::BadRequest(ref message) => HttpResponse::BadRequest().json(message),
             ServiceError::Unauthorized => HttpResponse::Unauthorized().json("Unauthorized"),
+            ServiceError::NotLogined => HttpResponse::Unauthorized().json("Not logined"),
         }
     }
 }

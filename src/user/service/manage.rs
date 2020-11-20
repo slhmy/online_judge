@@ -1,6 +1,7 @@
 use crate::{
     database::*,
     user::model::*,
+    user::service::me::auth_check,
     utils::{
         encryption::encode::make_hash,
         role_filter::customize_role,
@@ -238,39 +239,12 @@ pub async fn delete_user(
     id: Identity,
 ) -> HttpResponse {
     let res;
-    if let Some(user_id) = id.identity() {
-        let get_user_res = data.db
-            .send(UserId(user_id.parse::<i32>().unwrap())).await;
-        let user;
-        match get_user_res {
-            Err(_) => { 
-                return HttpResponse::InternalServerError().json(
-                    OperationResult {
-                        result_en: Some("unexpected error".to_owned()),
-                        msg_en: Some("Something went wrong in database".to_owned()),
-                        result_cn: None,
-                        msg_cn: None,
-                    });
-            },
-            Ok(inner_res) => { 
-                match inner_res {
-                    Err(msg) => { return HttpResponse::BadRequest().json(
-                        OperationResult {
-                            result_en: Some("error".to_owned()),
-                            msg_en: Some(format!("Get User information failed.\n{}.", msg)),
-                            result_cn: None,
-                            msg_cn: None,
-                        });
-                    },
-                    Ok(inner_user) => { user = inner_user; },
-                }
-            },
-        }
 
-        if user.role == "admin".to_owned() {
-            res = data.db
-                .send(form.into_inner()).await;
-        } else {
+    match auth_check(data.clone(), id.clone(), "admin".to_owned()).await {
+        Ok(_) => {
+            res = data.db.send(form.into_inner()).await;
+        },
+        Err(_) => {
             return HttpResponse::BadRequest().json(
                 OperationResult {
                     result_en: Some("rejected".to_owned()),
@@ -279,14 +253,6 @@ pub async fn delete_user(
                     msg_cn: None,
                 });
         }
-    } else {
-        return HttpResponse::BadRequest().json(
-            OperationResult {
-                result_en: Some("rejected".to_owned()),
-                msg_en: Some("You are not logined now.".to_owned()),
-                result_cn: None,
-                msg_cn: None,
-            });
     }
     
     match res {

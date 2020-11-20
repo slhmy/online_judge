@@ -6,11 +6,11 @@ pub struct Problem {
     pub description: Option<String>,
     pub input_explain: Option<String>,
     pub output_explain: Option<String>,
-    pub input_examples: Option<Vec<String>>,
-    pub output_examples: Option<Vec<String>>,
+    pub input_examples: Vec<String>,
+    pub output_examples: Vec<String>,
     pub hint: Option<String>,
-    pub tags: Option<Vec<String>>,
-    pub sources: Option<Vec<String>>,
+    pub tags: Vec<String>,
+    pub sources: Vec<String>,
     pub difficulty: String,
     pub submit_times: i32,
     pub accept_times: i32,
@@ -34,7 +34,7 @@ pub struct ProblemContext {
     description: Option<String>, 
     input_explain: Option<String>,
     output_explain: Option<String>,
-    examples: Option<Vec<Example>>,
+    examples: Vec<Example>,
     hint: Option<String>,
 }
 
@@ -47,8 +47,8 @@ pub struct OutProblem {
     pub default_max_memory: i32,
     pub max_score: i32,
     pub problem: ProblemContext,
-    pub tags: Option<Vec<String>>,
-    pub sources: Option<Vec<String>>,
+    pub tags: Vec<String>,
+    pub sources: Vec<String>,
     pub difficulty: String,
     pub accept_times: i32,
     pub submit_times: i32,
@@ -84,18 +84,15 @@ impl From<Problem> for OutProblem {
             ..
         } = problem;
 
-        let examples = 
-            if !input_examples.is_none() {
-                let mut unwraped_examples = Vec::new();
-                let unwraped_input_examples = input_examples.unwrap();
-                let unwraped_output_examples = output_examples.unwrap();
-                for i in 0..unwraped_input_examples.len().min(unwraped_output_examples.len()) {
-                    let input_example = unwraped_input_examples[i].clone();
-                    let output_example = unwraped_output_examples[i].clone();
-                    unwraped_examples.push(Example { input_example, output_example })
-                }
-                Some(unwraped_examples)
-            } else { None };
+        let examples = {
+            let mut examples = Vec::new();
+            for i in 0..input_examples.len().min(output_examples.len()) {
+                let input_example = input_examples[i].clone();
+                let output_example = output_examples[i].clone();
+                examples.push(Example { input_example, output_example })
+            }
+            examples
+        };
         OutProblem {
             id: id,
             region: region,

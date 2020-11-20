@@ -18,6 +18,7 @@ use crate::{
         model::OutProblem,
         service::{
             catalog::{
+                GetProblemCatalogForm,
                 ProblemCatalog,
                 get_problem_catalog_service,
             },
@@ -110,10 +111,23 @@ impl QueryRoot {
 
     fn problem_catalog(
         context: &Context,
-        region: String, 
+        region: String,
         problems_per_page: Option<i32>,
+        title: Option<String>,
+        tags: Option<Vec<String>>,
+        difficulty: Option<String>,
     ) -> ServiceResult<ProblemCatalog> {
-        executor::block_on(get_problem_catalog_service(context.db.clone(), region.clone(), problems_per_page))
+        executor::block_on(get_problem_catalog_service(
+            context.db.clone(),
+            GetProblemCatalogForm {
+                region: region,
+                problems_per_page: problems_per_page,
+                title: title,
+                tags: tags,
+                difficulty: difficulty,
+            },
+            context.id.clone(),
+        ))
     }
 
     fn test_case_catalog(

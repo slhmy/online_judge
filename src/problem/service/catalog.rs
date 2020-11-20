@@ -5,16 +5,20 @@ use crate::{
 use diesel::prelude::*;
 use actix::prelude::*;
 use actix_web::web;
+use actix_identity::Identity;
+use atoi::atoi;
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct ProblemCatalogElement {
     pub id: i32,
     pub title: String,
-    pub tags: Option<Vec<String>>,
+    pub tags: Vec<String>,
     pub difficulty: String,
     pub accept_times: i32,
     pub submit_times: i32,
     pub accept_rate: f64,
+    pub is_passed: bool,
+    pub highest_score: Option<f64>,
 }
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
@@ -25,9 +29,22 @@ pub struct ProblemCatalog {
 }
 
 #[derive(Debug, Clone, Deserialize)]
-pub struct GetProblemCatalogMessage {
+pub struct GetProblemCatalogForm {
     pub region: String,
     pub problems_per_page: Option<i32>,
+    pub title: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub difficulty: Option<String>,
+}
+
+#[derive(Debug, Clone, Deserialize)]
+pub struct GetProblemCatalogMessage {
+    pub user_id: Option<i32>,
+    pub region: String,
+    pub problems_per_page: Option<i32>,
+    pub title: Option<String>,
+    pub tags: Option<Vec<String>>,
+    pub difficulty: Option<String>,
 }
 
 impl Message for GetProblemCatalogMessage {
@@ -39,11 +56,27 @@ impl Handler<GetProblemCatalogMessage> for DbExecutor {
     
     fn handle(&mut self, msg: GetProblemCatalogMessage, _: &mut Self::Context) -> Self::Result {
         use crate::schema::problems::dsl::*;
+        use crate::schema::status;
 
-        let result = problems.filter(region.eq(msg.region))
+        let search_title = if msg.title.is_some() {
+            let result = str::replace(&msg.title.unwrap(), " ", "%");
+            Some("%".to_owned() + &result + "%")
+        } else { None };
+
+        let search_tags: Vec<String> = if msg.tags.is_some() {
+            if msg.tags.clone().unwrap().len() > 0 { msg.tags.unwrap() }
+            else { Vec::<String>::new() }
+        } else { Vec::<String>::new() };
+
+        let result = problems.filter(region.eq(msg.region.clone()))
+            .filter(tags.overlaps_with(search_tags.clone()).or(search_tags.is_empty()))
+            .filter(title.ilike(search_title.clone().unwrap_or("".to_owned())).or(search_title.is_none()))
+            .filter(difficulty.nullable().eq(msg.difficulty.clone()).or(msg.difficulty.is_none()))
+            .order_by(id.asc())
             .select( (id, title, tags, difficulty, accept_times, submit_times) )
-            .load::<(i32, String, Option<Vec<String>>, String, i32, i32)>(&self.0)
+            .load::<(i32, String, Vec<String>, String, i32, i32)>(&self.0)
             .expect("Error loading problems.");
+
         let mut catalog = ProblemCatalog {
             total_count: 0,
             elements: Vec::new(),
@@ -68,7 +101,35 @@ impl Handler<GetProblemCatalogMessage> for DbExecutor {
                     accept_times: p_accept_times,
                     submit_times: p_submit_times,
                     accept_rate: if p_submit_times == 0 { 0.0 } 
-                        else { p_accept_times as f64 / p_submit_times as f64 }, 
+                        else { p_accept_times as f64 / p_submit_times as f64 },
+                    is_passed: if msg.user_id.is_none() { false } else {
+                        let result: i64 = status::table
+                            .filter(status::result.is_not_null())
+                            .filter(status::problem_region.eq(msg.region.clone()))
+                            .filter(status::problem_id.eq(p_id))
+                            .filter(status::result.nullable().eq("Accepted".to_owned()))
+                            .filter(status::owner_id.eq(msg.user_id.unwrap()))
+                            .count()
+                            .get_result(&self.0)
+                            .expect("Error loading user's status.");
+
+                        if result > 0 { true } else { false }
+                    },
+                    highest_score: if msg.user_id.is_none() { None } else {
+                        let result = status::table
+                            .filter(status::score.is_not_null())
+                            .filter(status::problem_region.eq(msg.region.clone()))
+                            .filter(status::problem_id.eq(p_id))
+                            .filter(status::owner_id.eq(msg.user_id.unwrap()))
+                            .select(status::score)
+                            .order_by(status::score.desc())
+                            .first::<Option<f64>>(&self.0);
+
+                        match result {
+                            Err(_) => { None },
+                            Ok(highest_score) => highest_score,
+                        }
+                    },
                 }
             );
             page_problem_count += 1;
@@ -81,13 +142,24 @@ impl Handler<GetProblemCatalogMessage> for DbExecutor {
 
 pub async fn get_problem_catalog_service (
     data: web::Data<DBState>,
-    region: String,
-    problems_per_page: Option<i32>,
+    msg: GetProblemCatalogForm,
+    id: Identity,
 ) -> ServiceResult<ProblemCatalog> {
-    let db_result = data.db.send(GetProblemCatalogMessage {
-        region: region,
-        problems_per_page: problems_per_page,
-    }).await;
+
+    let user_id = if id.identity().is_some() {
+        Some(atoi::<i32>(id.identity().unwrap().as_bytes()).unwrap())
+    } else { None };
+
+    let db_result = data.db.send(
+        GetProblemCatalogMessage {
+            user_id: user_id,
+            region: msg.region,
+            problems_per_page: msg.problems_per_page,
+            title: msg.title,
+            tags: msg.tags,
+            difficulty: msg.difficulty,
+        }
+    ).await;
 
     match db_result {
         Err(_) => Err(ServiceError::InternalServerError),

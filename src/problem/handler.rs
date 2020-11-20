@@ -6,7 +6,8 @@ use crate::{
         content::GetProblemMessage,
         content::get_problem as get_problem_service,
         new::{ new_problem_service, NewProblemMessage },
-        update::{ update_problem_service, UpdateProblemMessage }
+        update::{ update_problem_service, UpdateProblemMessage },
+        delete::{ delete_problem_service, DeleteProblemMessage }
     },
     errors::ServiceError,
 };
@@ -46,5 +47,14 @@ pub async fn update_problem(
     id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
     update_problem_service(data, form.to_owned(), id).await
+        .map(|res| HttpResponse::Ok().json(&res))
+}
+
+pub async fn delete_problem(
+    data: web::Data<DBState>,
+    form: web::Form<DeleteProblemMessage>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    delete_problem_service(data, form.to_owned(), id).await
         .map(|res| HttpResponse::Ok().json(&res))
 }

@@ -15,8 +15,15 @@ use crate::problem::{
     service::{
         new::{ new_problem_service, NewProblemMessage },
         update::{ update_problem_service, UpdateProblemMessage },
+        delete::{ delete_problem_service, DeleteProblemMessage },
     },
-    model::{ OutProblem },
+    model::{ OutProblem, DeleteProblemResult },
+};
+use crate::test_case::{
+    service::{
+        delete::{ delete_test_case_service, DeleteTestCaseMessage },
+    },
+    model::{ DeleteTestCaseResult },
 };
 use crate::errors::ServiceResult;
 
@@ -178,6 +185,34 @@ impl MutationRoot {
                 new_test_case: new_test_case,
                 new_max_score: new_max_score,
                 new_opaque_output: new_opaque_output,
+            },
+            context.id.clone(),
+        ))
+    }
+
+    fn delete_problem(
+        context: &Context,
+        id: i32,
+        region: String,
+    ) -> ServiceResult<DeleteProblemResult> {
+        executor::block_on(delete_problem_service(
+            context.db.clone(),
+            DeleteProblemMessage {
+                id: id,
+                region: region,
+            },
+            context.id.clone(),
+        ))
+    }
+
+    fn delete_test_case(
+        context: &Context,
+        name: String,
+    ) -> ServiceResult<DeleteTestCaseResult> {
+        executor::block_on(delete_test_case_service(
+            context.db.clone(),
+            DeleteTestCaseMessage {
+                name: name,
             },
             context.id.clone(),
         ))

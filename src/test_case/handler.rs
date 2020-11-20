@@ -5,6 +5,7 @@ use crate::{
         catalog::get_test_case_catalog_service,
         new::new_test_case_service,
         update::update_test_case_service,
+        delete::{ delete_test_case_service, DeleteTestCaseMessage },
     },
     errors::ServiceError,
 };
@@ -65,4 +66,13 @@ pub async fn update_test_case(
     update_test_case_service(data, &bytes, info.test_case_name.clone(), info.is_spj, id)
     .await
     .map(|res| HttpResponse::Ok().json(&res))
+}
+
+pub async fn delete_test_case(
+    data: web::Data<DBState>,
+    form: web::Form<DeleteTestCaseMessage>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    delete_test_case_service(data, form.to_owned(), id).await
+        .map(|res| HttpResponse::Ok().json(&res))
 }

@@ -12,5 +12,6 @@ pub fn route(cfg: &mut web::ServiceConfig) {
             .service(web::resource("/get_problem").route(web::post().to(get_problem)))
             .service(web::resource("/new_problem").route(web::post().to(new_problem)))
             .service(web::resource("/update_problem").route(web::post().to(update_problem)))
+            .service(web::resource("/delete_problem").route(web::post().to(delete_problem)))
     );
 }

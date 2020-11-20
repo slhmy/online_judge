@@ -7,3 +7,8 @@ pub struct TestCase {
     pub is_spj: bool,
     pub count: i32,
 }
+
+#[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
+pub struct DeleteTestCaseResult {
+    pub result: String,
+}

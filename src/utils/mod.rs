@@ -4,3 +4,4 @@ pub mod operation_result;
 pub mod sendsms_url_builder;
 pub mod encryption;
 pub mod time;
+pub mod model;

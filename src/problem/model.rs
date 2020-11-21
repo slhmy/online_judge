@@ -55,11 +55,6 @@ pub struct OutProblem {
     pub accept_rate: f64,
 }
 
-#[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
-pub struct DeleteProblemResult {
-    pub result: String,
-}
-
 impl From<Problem> for OutProblem {
     fn from(problem: Problem) -> Self {
         let Problem {

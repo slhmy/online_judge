@@ -7,6 +7,7 @@ use crate::region::service::new::NewRegionMessage;
 use crate::contest::{
     service::{
         new::{ new_contest_service, NewContestMessage },
+        delete:: { delete_contest_service, DeleteContestMessage },
         register::register_service,
     },
     model::{ OutContest, RegisterInfo },
@@ -17,14 +18,14 @@ use crate::problem::{
         update::{ update_problem_service, UpdateProblemMessage },
         delete::{ delete_problem_service, DeleteProblemMessage },
     },
-    model::{ OutProblem, DeleteProblemResult },
+    model::OutProblem,
 };
 use crate::test_case::{
     service::{
         delete::{ delete_test_case_service, DeleteTestCaseMessage },
     },
-    model::{ DeleteTestCaseResult },
 };
+use crate::utils::model::DeleteResult;
 use crate::errors::ServiceResult;
 
 #[juniper::object(Context = Context)]
@@ -78,6 +79,19 @@ impl MutationRoot {
                 end_time: end_time,
                 seal_before_end: seal_before_end,
                 register_end_time: register_end_time,
+            },
+            context.id.clone(),
+        ))
+    }
+
+    fn delete_contest(
+        context: &Context,
+        region_name: String,
+    ) -> ServiceResult<DeleteResult> {
+        executor::block_on(delete_contest_service(
+            context.db.clone(),
+            DeleteContestMessage {
+                region_name,
             },
             context.id.clone(),
         ))
@@ -194,7 +208,7 @@ impl MutationRoot {
         context: &Context,
         id: i32,
         region: String,
-    ) -> ServiceResult<DeleteProblemResult> {
+    ) -> ServiceResult<DeleteResult> {
         executor::block_on(delete_problem_service(
             context.db.clone(),
             DeleteProblemMessage {
@@ -208,7 +222,7 @@ impl MutationRoot {
     fn delete_test_case(
         context: &Context,
         name: String,
-    ) -> ServiceResult<DeleteTestCaseResult> {
+    ) -> ServiceResult<DeleteResult> {
         executor::block_on(delete_test_case_service(
             context.db.clone(),
             DeleteTestCaseMessage {

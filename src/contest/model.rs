@@ -9,7 +9,6 @@ pub struct Contest {
     pub end_time: NaiveDateTime,
     pub seal_before_end: Option<i32>,
     pub register_end_time: NaiveDateTime,
-    pub final_rank: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, Queryable, juniper::GraphQLObject)]

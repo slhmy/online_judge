@@ -15,7 +15,6 @@ table! {
         end_time -> Timestamp,
         seal_before_end -> Nullable<Int4>,
         register_end_time -> Timestamp,
-        final_rank -> Nullable<Text>,
     }
 }
 

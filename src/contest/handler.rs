@@ -4,6 +4,7 @@ use crate::{
     contest::service::{ 
         new::{ new_contest_service, NewContestMessage },
         register::register_service,
+        delete::{ delete_contest_service, DeleteContestMessage },
     },
     errors::ServiceError,
 };
@@ -50,6 +51,19 @@ pub async fn new_contest(
             seal_before_end: form.seal_before_end,
             register_end_time: form.register_end_time.clone(),
         },
+        id,
+    ).await
+    .map(|res| HttpResponse::Ok().json(&res))
+}
+
+pub async fn delete_contest(
+    data: web::Data<DBState>, 
+    form: web::Form<DeleteContestMessage>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    delete_contest_service(
+        data,
+        form.to_owned(),
         id,
     ).await
     .map(|res| HttpResponse::Ok().json(&res))

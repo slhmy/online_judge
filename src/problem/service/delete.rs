@@ -2,7 +2,7 @@ use crate::{
     schema::problems,
     schema::status,
     database::*,
-    problem::model::DeleteProblemResult,
+    utils::model::DeleteResult,
     errors::{ ServiceError, ServiceResult },
 };
 use diesel::prelude::*;
@@ -11,7 +11,7 @@ use actix_web::web;
 use actix_identity::Identity;
 
 impl Message for DeleteProblemMessage {
-    type Result = Result<DeleteProblemResult, String>;
+    type Result = Result<DeleteResult, String>;
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -21,7 +21,7 @@ pub struct DeleteProblemMessage {
 }
 
 impl Handler<DeleteProblemMessage> for DbExecutor {
-    type Result = Result<DeleteProblemResult, String>;
+    type Result = Result<DeleteResult, String>;
 
     fn handle(&mut self, msg: DeleteProblemMessage, _: &mut Self::Context) -> Self::Result {
 
@@ -38,7 +38,7 @@ impl Handler<DeleteProblemMessage> for DbExecutor {
                     .execute(&self.0)
                 {
                     Err(_) => { Err("Error while deleting problem.".to_owned()) },
-                    Ok(_) => { Ok(DeleteProblemResult {
+                    Ok(_) => { Ok(DeleteResult {
                         result: "success".to_owned(),
                     }) }
                 }
@@ -51,7 +51,7 @@ pub async fn delete_problem_service(
     data: web::Data<DBState>,
     msg: DeleteProblemMessage,
     _id: Identity,
-) -> ServiceResult<DeleteProblemResult> {
+) -> ServiceResult<DeleteResult> {
     let db_result = data.db.send(msg).await;
 
     match db_result {

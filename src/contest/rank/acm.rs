@@ -20,3 +20,8 @@ pub struct RankColume {
     pub total_penalty: i32,
     pub solution_previews: Vec<SolutionPreview>
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize, juniper::GraphQLObject)]
+pub struct Rank {
+    pub columes: Vec<RankColume>
+}

@@ -1,7 +1,7 @@
 use crate::{
     schema::test_cases,
     database::*,
-    test_case::model::DeleteTestCaseResult,
+    utils::model::DeleteResult,
     errors::{ ServiceError, ServiceResult },
 };
 use diesel::prelude::*;
@@ -11,7 +11,7 @@ use actix_identity::Identity;
 use std::fs;
 
 impl Message for DeleteTestCaseMessage {
-    type Result = Result<DeleteTestCaseResult, String>;
+    type Result = Result<DeleteResult, String>;
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -20,7 +20,7 @@ pub struct DeleteTestCaseMessage {
 }
 
 impl Handler<DeleteTestCaseMessage> for DbExecutor {
-    type Result = Result<DeleteTestCaseResult, String>;
+    type Result = Result<DeleteResult, String>;
 
     fn handle(&mut self, msg: DeleteTestCaseMessage, _: &mut Self::Context) -> Self::Result {
         let path = "data/test_case/".to_owned() + &msg.name;
@@ -33,7 +33,7 @@ impl Handler<DeleteTestCaseMessage> for DbExecutor {
                 match fs::remove_dir_all(&path)
                 {
                     Err(_) => { Err("Error while deleting test_case related folder.".to_owned()) },
-                    Ok(_) => { Ok(DeleteTestCaseResult {
+                    Ok(_) => { Ok(DeleteResult {
                         result: "success".to_owned(),
                     }) }
                 }
@@ -46,7 +46,7 @@ pub async fn delete_test_case_service(
     data: web::Data<DBState>,
     msg: DeleteTestCaseMessage,
     _id: Identity,
-) -> ServiceResult<DeleteTestCaseResult> {
+) -> ServiceResult<DeleteResult> {
     let db_result = data.db.send(msg).await;
 
     match db_result {

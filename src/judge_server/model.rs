@@ -22,37 +22,6 @@ pub struct JudgeSetting {
     pub output: bool,
 }
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct JudgeResultData {
-    pub cpu_time: i32,
-    pub real_time: i32,
-    pub memory: i32,
-    pub signal: i32,
-    pub exit_code: i32,
-    pub error: i32,
-    pub result: i32,
-    pub test_case: String,
-    pub output_md5: Option<String>,
-    pub output: Option<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ErrChecker {
-    pub err: Option<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct JudgeResult {
-    pub err: Option<String>,
-    pub data: Vec<JudgeResultData>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct ErrResult {
-    pub err: Option<String>,
-    pub data: String,
-}
-
 #[derive(Debug, Clone)]
 pub struct JudgeServerInfo {
     pub judger_version: String,

@@ -1,6 +1,7 @@
 use crate::{
     database::*,
     region::service::new::NewRegionMessage,
+    contest::rank::acm::{ get_acm_rank_service, GetACMRankMessage },
     contest::service::{ 
         new::{ new_contest_service, NewContestMessage, NewContestForm },
         register::{ register_service, RegisterForm },
@@ -19,6 +20,19 @@ pub async fn get_contest(
     id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
     get_contest_service(
+        data,
+        form.to_owned(),
+        id,
+    ).await
+    .map(|res| HttpResponse::Ok().json(&res))
+}
+
+pub async fn get_acm_rank(
+    data: web::Data<DBState>, 
+    form: web::Form<GetACMRankMessage>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    get_acm_rank_service(
         data,
         form.to_owned(),
         id,

@@ -1,5 +1,5 @@
 use super::mapper::*;
-use crate::judge_manager::model::*;
+use crate::status::model::*;
 
 #[derive(Debug, Clone, Serialize)]
 pub struct TestCaseResult {

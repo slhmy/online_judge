@@ -10,5 +10,6 @@ pub fn route(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/status")
             .service(web::resource("/get_catalog").route(web::post().to(get_status_catalog)))
+            .service(web::resource("/get").route(web::post().to(get_status)))
     );
 }

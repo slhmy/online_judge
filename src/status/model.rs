@@ -36,3 +36,54 @@ pub struct InsertableStatus {
     pub finish_time: Option<NaiveDateTime>,
     pub language: String,
 }
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JudgeResultData {
+    pub cpu_time: i32,
+    pub real_time: i32,
+    pub memory: i32,
+    pub signal: i32,
+    pub exit_code: i32,
+    pub error: i32,
+    pub result: i32,
+    pub test_case: String,
+    pub output_md5: Option<String>,
+    pub output: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct JudgeResult {
+    pub err: Option<String>,
+    pub data: Vec<JudgeResultData>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, juniper::GraphQLObject)]
+pub struct MappedJudgeResultData {
+    pub cpu_time: i32,
+    pub real_time: i32,
+    pub memory: i32,
+    pub signal: i32,
+    pub exit_code: i32,
+    pub error: String,
+    pub result: String,
+    pub test_case: String,
+    pub output_md5: Option<String>,
+    pub output: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, juniper::GraphQLObject)]
+pub struct MappedJudgeResult {
+    pub err: Option<String>,
+    pub data: Vec<MappedJudgeResultData>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, juniper::GraphQLObject)]
+pub struct ErrResult {
+    pub err: Option<String>,
+    pub data: String,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ErrChecker {
+    pub err: Option<String>,
+}

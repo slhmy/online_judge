@@ -1,8 +1,8 @@
 use crate::{
     database::*,
     status::service::{
-        catalog::GetStatusCatalogMessage,
-        catalog::get_status_catalog_service,
+        catalog::{ GetStatusCatalogMessage, get_status_catalog_service },
+        get::{ get_status_service, GetStatusMessage }
     },
     errors::ServiceError,
 };
@@ -20,5 +20,14 @@ pub async fn get_status_catalog(
         form.username.clone(), form.language.clone(),
         form.page_number, id
     ).await
+    .map(|res| HttpResponse::Ok().json(&res))
+}
+
+pub async fn get_status(
+    data: web::Data<DBState>, 
+    form: web::Form<GetStatusMessage>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    get_status_service(data, form.to_owned(), id).await
     .map(|res| HttpResponse::Ok().json(&res))
 }

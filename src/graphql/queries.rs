@@ -12,6 +12,7 @@ use crate::service::{
     user_service::*,
     problem_service::*,
 };
+use uuid::Uuid;
 
 use crate::{
     problem::{
@@ -25,8 +26,10 @@ use crate::{
         info::{ OutJudgeServerInfo,server_info as server_info_service },
     },
     status::service::{
-        catalog::{ StatusCatalog, get_status_catalog_service }
+        catalog::{ StatusCatalog, get_status_catalog_service },
+        get::{ GetStatusMessage, get_status_service, DetailedStatus },
     },
+    contest::rank::acm::{ get_acm_rank_service, GetACMRankMessage, ACMRank },
     contest::service::{
         get::{ get_contest_service, GetContestForm },
         catalog::{ ContestCatalog, ContestCatalogElement, get_contest_catalog_service, GetContestCatalogForm },
@@ -71,6 +74,28 @@ impl QueryRoot {
         region: String
     ) -> ServiceResult<OutProblem> {
         executor::block_on(get_problem_service(context.db.clone(), id, region, context.id.clone()))
+    }
+
+    fn acm_rank(
+        context: &Context, 
+        region: String,
+        columes_per_page: Option<i32>,
+    ) -> ServiceResult<ACMRank> {
+        executor::block_on(get_acm_rank_service(
+            context.db.clone(),
+            GetACMRankMessage {
+                region: region,
+                columes_per_page: columes_per_page,
+            },
+            context.id.clone(),
+        ))
+    }
+
+    fn status(
+        context: &Context, 
+        id: Uuid, 
+    ) -> ServiceResult<DetailedStatus> {
+        executor::block_on(get_status_service(context.db.clone(), GetStatusMessage{ id:id }, context.id.clone()))
     }
 
     fn status_catalog(

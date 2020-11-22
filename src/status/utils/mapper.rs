@@ -1,4 +1,4 @@
-pub fn _result_mapper(value: i32) -> String {
+pub fn result_mapper(value: i32) -> String {
     match value {
         -1 => "WRONG_ANSWER".to_owned(),
         0 => "SUCCESS".to_owned(),
@@ -11,7 +11,7 @@ pub fn _result_mapper(value: i32) -> String {
     }
 }
 
-pub fn _err_mapper(value: i32) -> String {
+pub fn err_mapper(value: i32) -> String {
     match value {
         0 => "SUCCESS".to_owned(),
         -1 => "INVALID_CONFIG".to_owned(),

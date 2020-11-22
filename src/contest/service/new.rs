@@ -23,6 +23,18 @@ struct InsertableContest {
     register_end_time: NaiveDateTime,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct NewContestForm {
+    pub region: String,
+    pub name: String, 
+    pub start_time: String,
+    pub end_time: String,
+    pub seal_before_end: Option<i32>,
+    pub register_end_time: Option<String>,
+    pub judge_type: String,
+    pub password: Option<String>,
+}
+
 impl Message for NewContestMessage {
     type Result = Result<OutContest, String>;
 }

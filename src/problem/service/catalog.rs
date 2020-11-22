@@ -31,7 +31,7 @@ pub struct ProblemCatalog {
 #[derive(Debug, Clone, Deserialize)]
 pub struct GetProblemCatalogForm {
     pub region: String,
-    pub problems_per_page: Option<i32>,
+    pub elements_per_page: Option<i32>,
     pub title: Option<String>,
     pub tags: Option<Vec<String>>,
     pub difficulty: Option<String>,
@@ -41,7 +41,7 @@ pub struct GetProblemCatalogForm {
 pub struct GetProblemCatalogMessage {
     pub user_id: Option<i32>,
     pub region: String,
-    pub problems_per_page: Option<i32>,
+    pub elements_per_page: Option<i32>,
     pub title: Option<String>,
     pub tags: Option<Vec<String>>,
     pub difficulty: Option<String>,
@@ -87,7 +87,7 @@ impl Handler<GetProblemCatalogMessage> for DbExecutor {
         catalog.elements.push(Vec::new());
         info!("{:?}", result);
         for (p_id, p_title, p_tags, p_difficulty, p_accept_times, p_submit_times) in result {
-            if !msg.problems_per_page.is_none() && msg.problems_per_page.unwrap() == page_problem_count {
+            if !msg.elements_per_page.is_none() && msg.elements_per_page.unwrap() == page_problem_count {
                 catalog.elements.push(Vec::new());
                 current_page_number += 1;
                 page_problem_count = 0;
@@ -154,7 +154,7 @@ pub async fn get_problem_catalog_service (
         GetProblemCatalogMessage {
             user_id: user_id,
             region: msg.region,
-            problems_per_page: msg.problems_per_page,
+            elements_per_page: msg.elements_per_page,
             title: msg.title,
             tags: msg.tags,
             difficulty: msg.difficulty,

@@ -17,33 +17,22 @@ use crate::{
     problem::{
         model::OutProblem,
         service::{
-            catalog::{
-                GetProblemCatalogForm,
-                ProblemCatalog,
-                get_problem_catalog_service,
-            },
-            content::{ 
-                get_problem as get_problem_service,
-            }
+            catalog::{ GetProblemCatalogForm,ProblemCatalog,get_problem_catalog_service },
+            content::{ get_problem as get_problem_service }
         },
     },
     judge_server::service::{
-        info::{
-            OutJudgeServerInfo,
-            server_info as server_info_service,
-        },
+        info::{ OutJudgeServerInfo,server_info as server_info_service },
     },
     status::service::{
-        catalog::{
-            StatusCatalog,
-            get_status_catalog_service,
-        }
+        catalog::{ StatusCatalog, get_status_catalog_service }
+    },
+    contest::service::{
+        get::{ get_contest_service, GetContestForm },
+        catalog::{ ContestCatalog, ContestCatalogElement, get_contest_catalog_service, GetContestCatalogForm },
     },
     test_case::service::{
-        catalog::{
-            TestCaseCatalog,
-            get_test_case_catalog_service,
-        }
+        catalog::{ TestCaseCatalog, get_test_case_catalog_service }
     },
     errors::ServiceResult,
 };
@@ -112,7 +101,7 @@ impl QueryRoot {
     fn problem_catalog(
         context: &Context,
         region: String,
-        problems_per_page: Option<i32>,
+        elements_per_page: Option<i32>,
         title: Option<String>,
         tags: Option<Vec<String>>,
         difficulty: Option<String>,
@@ -121,13 +110,39 @@ impl QueryRoot {
             context.db.clone(),
             GetProblemCatalogForm {
                 region: region,
-                problems_per_page: problems_per_page,
+                elements_per_page: elements_per_page,
                 title: title,
                 tags: tags,
                 difficulty: difficulty,
             },
             context.id.clone(),
         ))
+    }
+
+    fn contest(
+        context: &Context,
+        region: String,
+    ) -> ServiceResult<ContestCatalogElement> {
+        executor::block_on(get_contest_service(
+            context.db.clone(),
+            GetContestForm{ 
+                region: region, 
+            },
+            context.id.clone()))
+    }
+
+    fn contest_catalog(
+        context: &Context,
+        name: Option<String>,
+        elements_per_page: Option<i32>,
+    ) -> ServiceResult<ContestCatalog> {
+        executor::block_on(get_contest_catalog_service(
+            context.db.clone(),
+            GetContestCatalogForm{ 
+                name: name, 
+                elements_per_page: elements_per_page
+            },
+            context.id.clone()))
     }
 
     fn test_case_catalog(

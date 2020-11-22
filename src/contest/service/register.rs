@@ -20,6 +20,13 @@ struct InsertableRegisterInfo {
     is_unrated: bool,
 }
 
+#[derive(Debug, Clone, Deserialize)]
+pub struct RegisterForm {
+    pub contest_region: String,
+    pub is_unrated: bool,
+    pub password: Option<String>,
+}
+
 impl Message for NewRegisterInfoMessage {
     type Result = Result<RegisterInfo, String>;
 }

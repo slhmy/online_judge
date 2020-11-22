@@ -2,37 +2,33 @@ use crate::{
     database::*,
     region::service::new::NewRegionMessage,
     contest::service::{ 
-        new::{ new_contest_service, NewContestMessage },
-        register::register_service,
+        new::{ new_contest_service, NewContestMessage, NewContestForm },
+        register::{ register_service, RegisterForm },
         delete::{ delete_contest_service, DeleteContestMessage },
+        catalog::{ get_contest_catalog_service, GetContestCatalogForm },
+        get::{ get_contest_service, GetContestForm },
     },
     errors::ServiceError,
 };
 use actix_web::{HttpResponse, web};
 use actix_identity::Identity;
 
-#[derive(Debug, Clone, Deserialize)]
-pub struct NewContestRequest {
-    pub region: String,
-    pub name: String, 
-    pub start_time: String,
-    pub end_time: String,
-    pub seal_before_end: Option<i32>,
-    pub register_end_time: Option<String>,
-    pub judge_type: String,
-    pub password: Option<String>,
-}
-
-#[derive(Debug, Clone, Deserialize)]
-pub struct RegisterRequest {
-    pub contest_region: String,
-    pub is_unrated: bool,
-    pub password: Option<String>,
+pub async fn get_contest(
+    data: web::Data<DBState>, 
+    form: web::Form<GetContestForm>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    get_contest_service(
+        data,
+        form.to_owned(),
+        id,
+    ).await
+    .map(|res| HttpResponse::Ok().json(&res))
 }
 
 pub async fn new_contest(
     data: web::Data<DBState>, 
-    form: web::Form<NewContestRequest>,
+    form: web::Form<NewContestForm>,
     id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
     new_contest_service(
@@ -69,9 +65,22 @@ pub async fn delete_contest(
     .map(|res| HttpResponse::Ok().json(&res))
 }
 
+pub async fn get_contest_catalog(
+    data: web::Data<DBState>, 
+    form: web::Form<GetContestCatalogForm>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    get_contest_catalog_service(
+        data,
+        form.to_owned(),
+        id,
+    ).await
+    .map(|res| HttpResponse::Ok().json(&res))
+}
+
 pub async fn register(
     data: web::Data<DBState>, 
-    form: web::Form<RegisterRequest>,
+    form: web::Form<RegisterForm>,
     id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
     register_service(

@@ -16,7 +16,8 @@ use crate::{
 use diesel::prelude::*;
 use actix::prelude::*;
 use actix_web::{HttpResponse, web, Responder};
-use futures::StreamExt;
+use actix_multipart::Multipart;
+use futures::{StreamExt, TryStreamExt};
 use rand::{thread_rng, Rng};
 
 #[derive(Debug, Clone, Deserialize, Insertable, Queryable)]
@@ -76,15 +77,21 @@ impl Handler<ResgisterMessage> for DbExecutor {
 
 pub async fn auto_register(
     data: web::Data<DBState>,
-    mut body: web::Payload
+    mut payload: Multipart,
 ) -> Result<HttpResponse, ServiceError> {
     let mut bytes = web::BytesMut::new();
-    while let Some(item) = body.next().await {
-        let item = match item {
-            Ok(item) => item,
-            Err(_) => { return Err(ServiceError::BadRequest("Error while getting file.".to_owned())); },
-        };
-        bytes.extend_from_slice(&item);
+    // iterate over multipart stream
+    while let Ok(Some(mut field)) = payload.try_next().await {
+        let _ = field.content_disposition().unwrap();
+
+        // Field in turn is stream of *Bytes* object
+        while let Some(chunk) = field.next().await {
+            let data = chunk.unwrap();
+            // filesystem operations are blocking, we have to use threadpool
+            bytes.extend_from_slice(&data);
+        }
+
+        break;
     }
     let mut count = 0;
     let mut rdr = csv::Reader::from_reader(&*bytes);

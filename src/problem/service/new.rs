@@ -18,8 +18,8 @@ struct InsertableProblem {
     description: Option<String>,
     input_explain: Option<String>,
     output_explain: Option<String>,
-    input_examples: Option<Vec<String>>,
-    output_examples: Option<Vec<String>>,
+    input_examples: Vec<String>,
+    output_examples: Vec<String>,
     hint: Option<String>,
     tags: Vec<String>,
     sources: Vec<String>,
@@ -72,8 +72,12 @@ impl Handler<NewProblemMessage> for DbExecutor {
                 description: msg.description,
                 input_explain: msg.input_explain,
                 output_explain: msg.output_explain,
-                input_examples: msg.input_examples,
-                output_examples: msg.output_examples,
+                input_examples: if msg.input_examples.is_none() {
+                    Vec::new()
+                } else { msg.input_examples.unwrap() },
+                output_examples: if msg.output_examples.is_none() {
+                    Vec::new()
+                } else { msg.output_examples.unwrap() },
                 hint: msg.hint,
                 tags: if msg.tags.is_none() {
                     Vec::new()

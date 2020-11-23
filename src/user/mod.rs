@@ -22,7 +22,7 @@ pub fn route(cfg: &mut web::ServiceConfig) {
                     .service(web::resource("/get_all_users").route(web::get().to(get_all_users)))
                     .service(web::resource("/change_info").route(web::post().to(change_info))) 
                     .service(web::resource("/delete_user").route(web::post().to(delete_user)))
-                    .service(web::resource("/auto_register").route(web::get().to(auto_register)))
+                    .service(web::resource("/auto_register").route(web::post().to(auto_register)))
             )
             .service(web::resource("/me").route(web::get().to(me))),
     );

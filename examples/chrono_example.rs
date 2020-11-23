@@ -1,4 +1,4 @@
-use chrono::NaiveDate;
+use chrono::*;
 
 fn main() {
     let dt = NaiveDate::from_ymd(1970, 1, 1).and_hms(0, 0, 0);

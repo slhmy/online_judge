@@ -11,7 +11,8 @@ use crate::{
 };
 use actix_web::{HttpResponse, web};
 use actix_identity::Identity;
-use futures::StreamExt;
+use actix_multipart::Multipart;
+use futures::{StreamExt, TryStreamExt};
 
 pub async fn get_test_case_catalog(
     data: web::Data<DBState>, 
@@ -33,16 +34,27 @@ pub struct UploadTestCaseInfo {
 pub async fn new_test_case(
     data: web::Data<DBState>,
     info: web::Path<UploadTestCaseInfo>,
-    mut body: web::Payload,
+    mut payload: Multipart,
     id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
     let mut bytes = web::BytesMut::new();
-    while let Some(item) = body.next().await {
-        let item = match item {
-            Ok(item) => item,
-            Err(_) => { return Err(ServiceError::BadRequest("Error while getting file.".to_owned())); },
-        };
-        bytes.extend_from_slice(&item);
+    // iterate over multipart stream
+    let mut filename = None;
+    while let Ok(Some(mut field)) = payload.try_next().await {
+        let content_type = field.content_disposition().unwrap();
+        if filename.is_none() {
+            filename = Some(content_type.get_filename().unwrap().to_owned());
+        } else {
+            // only accept one file
+            if filename.clone().unwrap() != content_type.get_filename().unwrap() { break; }
+        }
+
+        // Field in turn is stream of *Bytes* object
+        while let Some(chunk) = field.next().await {
+            let data = chunk.unwrap();
+            // filesystem operations are blocking, we have to use threadpool
+            bytes.extend_from_slice(&data);
+        }
     }
     new_test_case_service(data, &bytes, info.test_case_name.clone(), info.is_spj, id)
     .await
@@ -52,16 +64,27 @@ pub async fn new_test_case(
 pub async fn update_test_case(
     data: web::Data<DBState>,
     info: web::Path<UploadTestCaseInfo>,
-    mut body: web::Payload,
+    mut payload: Multipart,
     id: Identity,
 ) -> Result<HttpResponse, ServiceError> {
     let mut bytes = web::BytesMut::new();
-    while let Some(item) = body.next().await {
-        let item = match item {
-            Ok(item) => item,
-            Err(_) => { return Err(ServiceError::BadRequest("Error while getting file.".to_owned())); },
-        };
-        bytes.extend_from_slice(&item);
+    // iterate over multipart stream
+    let mut filename = None;
+    while let Ok(Some(mut field)) = payload.try_next().await {
+        let content_type = field.content_disposition().unwrap();
+        if filename.is_none() {
+            filename = Some(content_type.get_filename().unwrap().to_owned());
+        } else {
+            // only accept one file
+            if filename.clone().unwrap() != content_type.get_filename().unwrap() { break; }
+        }
+
+        // Field in turn is stream of *Bytes* object
+        while let Some(chunk) = field.next().await {
+            let data = chunk.unwrap();
+            // filesystem operations are blocking, we have to use threadpool
+            bytes.extend_from_slice(&data);
+        }
     }
     update_test_case_service(data, &bytes, info.test_case_name.clone(), info.is_spj, id)
     .await

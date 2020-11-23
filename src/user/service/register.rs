@@ -81,8 +81,15 @@ pub async fn auto_register(
 ) -> Result<HttpResponse, ServiceError> {
     let mut bytes = web::BytesMut::new();
     // iterate over multipart stream
+    let mut filename = None;
     while let Ok(Some(mut field)) = payload.try_next().await {
-        let _ = field.content_disposition().unwrap();
+        let content_type = field.content_disposition().unwrap();
+        if filename.is_none() {
+            filename = Some(content_type.get_filename().unwrap().to_owned());
+        } else {
+            // only accept one file
+            if filename.clone().unwrap() != content_type.get_filename().unwrap() { break; }
+        }
 
         // Field in turn is stream of *Bytes* object
         while let Some(chunk) = field.next().await {
@@ -90,8 +97,6 @@ pub async fn auto_register(
             // filesystem operations are blocking, we have to use threadpool
             bytes.extend_from_slice(&data);
         }
-
-        break;
     }
     let mut count = 0;
     let mut rdr = csv::Reader::from_reader(&*bytes);

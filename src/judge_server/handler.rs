@@ -3,10 +3,12 @@ use crate::{
     judge_manager::*,
     errors::ServiceError,
 };
-use actix_web::{HttpResponse, web};
+use actix_web::{ HttpResponse, web, Error };
 use actix_identity::Identity;
-use actix_web::Error;
-use futures::StreamExt;
+use std::io::Write;
+
+use actix_multipart::Multipart;
+use futures::{StreamExt, TryStreamExt};
 
 use super::service::{
     info::server_info,
@@ -46,18 +48,24 @@ pub async fn submit(
     ).await.map(|res| HttpResponse::Ok().json(&res))
 }
 
-pub async fn get_file(mut body: web::Payload) -> Result<HttpResponse, Error> {
-    use std::fs::File;
-    use std::io::prelude::*;
+pub async fn get_file(mut payload: Multipart) -> Result<HttpResponse, Error> {
+    // iterate over multipart stream
+    while let Ok(Some(mut field)) = payload.try_next().await {
+        let content_type = field.content_disposition().unwrap();
+        let filename = content_type.get_filename().unwrap();
+        let filepath = format!("data/tmp/{}", sanitize_filename::sanitize(&filename));
 
-    let mut bytes = web::BytesMut::new();
-    while let Some(item) = body.next().await {
-        let item = item?;
-        println!("Chunk: {:?}", &item);
-        bytes.extend_from_slice(&item);
+        // File::create is blocking operation, use threadpool
+        let mut f = web::block(|| std::fs::File::create(filepath))
+            .await
+            .unwrap();
+
+        // Field in turn is stream of *Bytes* object
+        while let Some(chunk) = field.next().await {
+            let data = chunk.unwrap();
+            // filesystem operations are blocking, we have to use threadpool
+            f = web::block(move || f.write_all(&data).map(|_| f)).await?;
+        }
     }
-    let mut file = File::create("foo.zip")?;
-    file.write_all(&bytes)?;
-
-    Ok(HttpResponse::Ok().finish())
+    Ok(HttpResponse::Ok().into())
 }

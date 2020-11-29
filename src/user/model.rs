@@ -14,7 +14,7 @@ pub struct User {
     pub school: Option<String>,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct OutUser {
     pub id: i32,
     pub username: String,

@@ -1,5 +1,6 @@
-mod model;
-mod service;
+pub mod model;
+pub mod service;
+mod handler;
 
 use actix_web::web;
 use service::{
@@ -8,12 +9,14 @@ use service::{
     register::*,
     me::*,
 };
+use handler::*;
 
 pub fn route(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/user")
             .service(web::resource("/register").route(web::post().to(register)))
             .service(web::resource("/get_verification_code").route(web::post().to(get_verification_code)))
+            .service(web::resource("/catalog").route(web::post().to(get_user_catalog)))
             .service(web::resource("/quick_login").route(web::post().to(quick_login)))
             .service(web::resource("/login").route(web::post().to(login)))
             .service(web::resource("/logout").route(web::get().to(logout)))

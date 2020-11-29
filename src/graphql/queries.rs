@@ -15,10 +15,15 @@ use crate::service::{
 use uuid::Uuid;
 
 use crate::{
+    user::{
+        service::{
+            catalog::{ GetUserCatalogMessage, get_user_catalog_service, UserCatalog },
+        }
+    },
     problem::{
         model::OutProblem,
         service::{
-            catalog::{ GetProblemCatalogForm,ProblemCatalog,get_problem_catalog_service },
+            catalog::{ GetProblemCatalogForm,ProblemCatalog, get_problem_catalog_service },
             content::{ get_problem as get_problem_service }
         },
     },
@@ -96,6 +101,29 @@ impl QueryRoot {
         id: Uuid, 
     ) -> ServiceResult<DetailedStatus> {
         executor::block_on(get_status_service(context.db.clone(), GetStatusMessage{ id:id }, context.id.clone()))
+    }
+
+    fn user_catalog(
+        context: &Context,
+        id: Option<i32>,
+        username: Option<String>,
+        mobile: Option<String>,
+        email: Option<String>,
+        job_number: Option<String>,
+        elements_per_page: Option<i32>,
+    ) -> ServiceResult<UserCatalog> {
+        executor::block_on(get_user_catalog_service(
+            context.db.clone(), 
+            GetUserCatalogMessage {
+                id: id,
+                username: username,
+                mobile: mobile,
+                email: email,
+                job_number: job_number,
+                elements_per_page: elements_per_page
+            },
+            context.id.clone())
+        )
     }
 
     fn status_catalog(

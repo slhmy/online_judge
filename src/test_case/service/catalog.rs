@@ -92,7 +92,7 @@ impl Handler<GetTestCaseCatalogMessage> for DbExecutor {
             catalog.total_count += 1;
         }
         
-        catalog.total_count += 1;
+        catalog.page_count += 1;
         Ok(catalog)
     }
 }

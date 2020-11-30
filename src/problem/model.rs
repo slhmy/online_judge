@@ -53,6 +53,8 @@ pub struct OutProblem {
     pub accept_times: i32,
     pub submit_times: i32,
     pub accept_rate: f64,
+    pub test_case: Option<String>,
+    pub opaque_output: bool,
 }
 
 impl From<Problem> for OutProblem {
@@ -74,9 +76,9 @@ impl From<Problem> for OutProblem {
             accept_times,
             default_max_cpu_time,
             default_max_memory,
-            test_case: _,
+            test_case,
             max_score,
-            ..
+            opaque_output,
         } = problem;
 
         let examples = {
@@ -111,6 +113,8 @@ impl From<Problem> for OutProblem {
             submit_times: submit_times,
             accept_rate: if submit_times == 0 { 0.0 } 
             else { accept_times as f64 / submit_times as f64 },
+            test_case: test_case,
+            opaque_output: opaque_output,
         }
     }
 }

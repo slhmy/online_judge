@@ -69,6 +69,24 @@ impl Handler<StartJudge> for JudgeManager {
                 let result_string = run_judge_client(server_token, setting_string);
                 info!("{}", result_string);
 
+                if result_string == String::from("") {
+                    let target = status::table.filter(status::id.eq(task_uuid));
+                    diesel::update(target)
+                        .set((
+                            status::state.eq("Waiting".to_owned()),
+                            status::start_pend_time.eq(Some(get_cur_naive_date_time())),
+                        ))
+                    .execute(&self.0).expect("Error changing status's state to Pending.");
+
+                    {
+                        let mut lock = WAITING_QUEUE.write().unwrap();
+                        lock.push_front(task_uuid);
+                    }
+                    
+                    info!("pushed {} back to queue", task_uuid);
+                    continue;
+                }
+
                 let (op_result, op_score, op_err_reason) = get_judge_result(judge_type_string, result_string.clone());
 
                 {

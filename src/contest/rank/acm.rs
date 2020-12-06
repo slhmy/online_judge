@@ -22,6 +22,7 @@ pub struct ACMSolutionPreview {
     pub problem_id: i32,
     pub try_times: i32,
     pub state: String,
+    pub solve_time: i32,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize, juniper::GraphQLObject)]
@@ -108,6 +109,7 @@ impl Handler<GetACMRankMessage> for DbExecutor {
                                 problem_region: problem_region,
                                 problem_id: problem_id,
                                 try_times: 0,
+                                solve_time: 0,
                                 state: String::from("Untried")
                             }
                         )
@@ -154,7 +156,8 @@ impl Handler<GetACMRankMessage> for DbExecutor {
                             if status.result == Some(String::from("Accepted")) {
                                 personal_colume.solution_previews[solution_index].try_times -= 1;
                                 personal_colume.solution_previews[solution_index].state = String::from("Accepted");
-                                personal_colume.total_penalty += 20*60*personal_colume.solution_previews[solution_index].try_times;
+                                personal_colume.solution_previews[solution_index].solve_time = (status.submit_time - contest_info.start_time).num_seconds() as i32;
+                                personal_colume.total_penalty += 20*60*personal_colume.solution_previews[solution_index].try_times + personal_colume.solution_previews[solution_index].solve_time;
                                 personal_colume.total_accepted += 1;
                             }
                             if status.result == Some(String::from("Unaccepted")) {

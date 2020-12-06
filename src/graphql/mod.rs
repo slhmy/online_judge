@@ -1,6 +1,5 @@
 pub mod mutations;
 pub mod queries;
-pub mod objects;
 
 pub mod schema {
     use juniper::RootNode;

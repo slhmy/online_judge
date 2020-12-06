@@ -3,12 +3,12 @@ pub mod model;
 pub mod handler;
 
 use actix_web::web;
-// use handler::*;
+use handler::*;
 
 pub fn route(cfg: &mut web::ServiceConfig) {
     cfg.service(
         web::scope("/region")
-            //.service(web::resource("/get_catalog").route(web::post().to(get_problem_catalog)))
-            //.service(web::resource("/get_problem").route(web::post().to(get_problem)))
+            .service(web::resource("/tags").route(web::post().to(get_tags)))
+            .service(web::resource("/info").route(web::post().to(get_info)))
     );
 }

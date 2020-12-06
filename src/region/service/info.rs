@@ -34,7 +34,7 @@ impl Handler<GetRegionMessage> for DbExecutor {
     }
 }
 
-pub async fn _get_region_service(
+pub async fn get_region_service(
     data: web::Data<DBState>,
     msg: GetRegionMessage,
     _id: Identity,

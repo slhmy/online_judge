@@ -1,23 +1,20 @@
 pub struct QueryRoot;
 use futures::executor;
-use juniper::FieldResult;
 use super::Context;
-use super::objects::{
-    starwar::*,
-    user::*,
-    tag::*,
-};
 
-use crate::service::{
-    user_service::*,
-    problem_service::*,
-};
 use uuid::Uuid;
 
 use crate::{
     user::{
         service::{
             catalog::{ GetUserCatalogMessage, get_user_catalog_service, UserCatalog },
+        }
+    },
+    region::{
+        model::OutRegion,
+        service::{
+            tags::{ GetRegionTagsMessage, get_region_tags_service, OutTags },
+            info::{ get_region_service, GetRegionMessage },
         }
     },
     problem::{
@@ -48,29 +45,25 @@ use crate::{
 #[juniper::object(Context = Context)]
 /// This is the root for all kinds of queries, you can get any thing avaliabe here
 impl QueryRoot {
-    /// Starwar query example
-    fn human(id: String) -> FieldResult<Human> {
-        Ok(Human {
-            id: "1234".to_owned(),
-            name: "Luke".to_owned(),
-            appears_in: vec![Episode::NewHope],
-            home_planet: "Mars".to_owned(),
-        })
+
+    fn region(context: &Context, name: String) -> ServiceResult<OutRegion> {
+        executor::block_on(get_region_service(
+            context.db.clone(),
+            GetRegionMessage {
+                name: name,
+            },
+            context.id.clone(),
+        ))
     }
 
-    /// Use query by token to get all the data related with user.
-    fn user(token: String) -> FieldResult<User> {
-        Ok(get_user_by_token(&token))
-    }
-
-    fn get_all_tags() -> FieldResult<Vec<Tag>> {
-        Ok(
-            vec![Tag {
-                id: 1,
-                name: "Basic".to_owned(),
-                related_problems: vec![get_problem_by_id(1)],
-            }]
-        )
+    fn region_tags(context: &Context, region: String) -> ServiceResult<OutTags> {
+        executor::block_on(get_region_tags_service(
+            context.db.clone(),
+            GetRegionTagsMessage {
+                region: region,
+            },
+            context.id.clone(),
+        ))
     }
 
     fn problem(

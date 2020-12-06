@@ -8,7 +8,7 @@ pub struct Region {
     pub judge_type: Option<String>,
 }
 
-#[derive(Debug, Clone, Deserialize, Queryable)]
+#[derive(Debug, Clone, Deserialize, Queryable, Serialize, juniper::GraphQLObject)]
 pub struct OutRegion {
     pub name: String,
     pub need_pass: bool,

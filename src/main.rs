@@ -1,5 +1,4 @@
 mod schema;
-mod service;
 mod judge_manager;
 mod database;
 mod user;

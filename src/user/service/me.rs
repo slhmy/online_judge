@@ -41,7 +41,7 @@ pub async fn me (
             },
         }
     } else {
-        HttpResponse::BadRequest().json(
+        HttpResponse::Unauthorized().json(
             OperationResult {
                 result_en: Some("rejected".to_owned()),
                 msg_en: Some("You are not logined now.".to_owned()),

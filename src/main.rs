@@ -71,7 +71,7 @@ async fn main() -> io::Result<()> {
                 // <- create identity middleware
                 CookieIdentityPolicy::new(&[0; 32])    // <- create cookie identity policy
                       .name("auth-cookie")
-                      .same_site(SameSite::None)
+                      //.same_site(SameSite::None)
                       .path("/")
                       .http_only(false)
                       .max_age(1800)    

@@ -18,6 +18,7 @@ pub struct ProblemCatalogElement {
     pub submit_times: i32,
     pub accept_rate: f64,
     pub is_passed: bool,
+    pub is_tried: bool,
     pub highest_score: Option<f64>,
 }
 
@@ -108,6 +109,18 @@ impl Handler<GetProblemCatalogMessage> for DbExecutor {
                             .filter(status::problem_region.eq(msg.region.clone()))
                             .filter(status::problem_id.eq(p_id))
                             .filter(status::result.nullable().eq("Accepted".to_owned()))
+                            .filter(status::owner_id.eq(msg.user_id.unwrap()))
+                            .count()
+                            .get_result(&self.0)
+                            .expect("Error loading user's status.");
+
+                        if result > 0 { true } else { false }
+                    },
+                    is_tried: if msg.user_id.is_none() { false } else {
+                        let result: i64 = status::table
+                            .filter(status::result.is_not_null())
+                            .filter(status::problem_region.eq(msg.region.clone()))
+                            .filter(status::problem_id.eq(p_id))
                             .filter(status::owner_id.eq(msg.user_id.unwrap()))
                             .count()
                             .get_result(&self.0)

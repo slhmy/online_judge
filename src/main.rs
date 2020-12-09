@@ -28,7 +28,7 @@ use actix_web::{
     App,
     middleware, 
     HttpServer,
-    cookie::SameSite,
+    //cookie::SameSite,
 };
 use actix_identity::{
     CookieIdentityPolicy, 

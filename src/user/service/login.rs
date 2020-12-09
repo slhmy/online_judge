@@ -113,6 +113,15 @@ pub struct GetVerificationCodeMessage {
 pub async fn get_verification_code(
     form: web::Form<GetVerificationCodeMessage>,
 ) -> HttpResponse {
+    if !form.mobile.clone().is_mobile() {
+        return HttpResponse::BadRequest().json(
+            OperationResult {
+                result_en: Some("error".to_owned()),
+                msg_en: Some("We think it is not a mobile. Maybe your mobile is incorrect.".to_owned()),
+                result_cn: None,
+                msg_cn: None,
+            })
+    }
     let (url, code) = get_url(&form.mobile);
     let response = Client::new()
         .get(url.clone())

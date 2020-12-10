@@ -46,7 +46,7 @@ pub struct OutProblem {
     pub default_max_cpu_time: i32,
     pub default_max_memory: i32,
     pub max_score: i32,
-    pub problem: ProblemContext,
+    pub problem_context: ProblemContext,
     pub tags: Vec<String>,
     pub sources: Vec<String>,
     pub difficulty: String,
@@ -97,7 +97,7 @@ impl From<Problem> for OutProblem {
             default_max_cpu_time: default_max_cpu_time,
             default_max_memory: default_max_memory,
             max_score: max_score,
-            problem: ProblemContext {
+            problem_context: ProblemContext {
                 max_cpu_time: default_max_cpu_time,
                 max_memory: default_max_memory,
                 description: description, 

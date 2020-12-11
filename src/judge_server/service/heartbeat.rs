@@ -54,9 +54,10 @@ pub async fn handle_heartbeat(
             .set_header("Content-Type", "application/json")
             .send()
             .await;
-        
+
         if !response.is_ok() {
             is_deprecated = true;
+            info!("setting is_deprecated to true");
         }
 
         let now = SystemTime::now();

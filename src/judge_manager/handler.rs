@@ -34,12 +34,7 @@ impl Handler<StartJudge> for JudgeManager {
             let server = choose_judge_server();
             if server.is_none() { return (); }
             let (server_url, server_token) = server.unwrap();
-            {
-                let mut lock = JUDGE_SERVER_INFOS.write().unwrap();
-                let mut server_info = lock.get(&server_url).unwrap().clone();
-                server_info.task_number += 1;
-                lock.insert(server_url.clone(), server_info);
-            }
+            
             let task_uuid = {
                 let mut lock = WAITING_QUEUE.write().unwrap();
                 lock.pop_front().clone().unwrap()
@@ -52,6 +47,13 @@ impl Handler<StartJudge> for JudgeManager {
                 .expect("Error loading setting_data from status.");
 
             if cur_state == "Waiting".to_owned() {
+                {
+                    let mut lock = JUDGE_SERVER_INFOS.write().unwrap();
+                    let mut server_info = lock.get(&server_url).unwrap().clone();
+                    server_info.task_number += 1;
+                    lock.insert(server_url.clone(), server_info);
+                }
+
                 let (judge_type_string, setting_string) = status::table
                     .filter(status::id.eq(task_uuid))
                     .select((status::judge_type, status::setting_data))

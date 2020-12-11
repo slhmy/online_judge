@@ -78,7 +78,7 @@ async fn main() -> Result<(), Error> {
     let mut judge_setting_string = String::new();
     stdin.read_line(&mut judge_setting_string)?;
     let judge_setting: JudgeSetting = serde_json::from_str(&judge_setting_string.trim())?;
-    let time_out = (judge_setting.max_cpu_time / 1000 + 5) as u64;
+    let time_out = (120) as u64;
 
     // Create request builder, configure request and send
     let mut response = Client::new()

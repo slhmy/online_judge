@@ -82,7 +82,7 @@ async fn main() -> Result<(), Error> {
 
     // Create request builder, configure request and send
     let mut response = Client::new()
-        .post(format!("{}/judge", url))
+        .post(format!("{}/judge", url.trim()))
         .set_header("X-Judge-Server-Token", token.trim())
         .set_header("Content-Type", "application/json")
         .timeout(Duration::new(time_out, 0))

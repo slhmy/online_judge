@@ -58,6 +58,8 @@ pub async fn handle_heartbeat(
         if !response.is_ok() {
             is_deprecated = true;
             info!("setting is_deprecated to true");
+        } else {
+            is_deprecated = false;
         }
 
         let now = SystemTime::now();

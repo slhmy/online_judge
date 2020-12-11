@@ -1,25 +1,14 @@
 version: "3"
 services:
-    judge_server:
-        image: registry.cn-hangzhou.aliyuncs.com/onlinejudge/judge_server
-        read_only: true
-        cap_drop:
-            - SETPCAP
-            - MKNOD
-            - NET_BIND_SERVICE
-            - SYS_CHROOT
-            - SETFCAP
-            - FSETID
-        tmpfs:
-            - /tmp
+    oj-rsync-master:
+        image: registry.cn-hangzhou.aliyuncs.com/onlinejudge/oj_rsync
+        container_name: oj-rsync-master
         volumes:
             - $PWD/data/test_case:/test_case:ro
-            - $PWD/data/log:/log
-            # - $PWD/server:/code:ro
-            - $PWD/data/run:/judger
+            - $PWD/data/rsync_master:/log
         environment:
-            - BACKEND_URL=http://172.17.0.1:8080/judge_server/heartbeat
-            - SERVICE_URL=http://127.0.0.1:12358
-            - TOKEN=YOUR_TOKEN_HERE    
+            - RSYNC_MODE=master
+            - RSYNC_USER=ojrsync
+            - RSYNC_PASSWORD=CHANGE_THIS_PASSWORD
         ports:
-            - "0.0.0.0:12358:8080"
+            - "0.0.0.0:873:873"

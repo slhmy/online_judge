@@ -75,6 +75,13 @@ impl Handler<StartJudge> for JudgeManager {
                 let result_string = run_judge_client(server_token, server_url.clone(), setting_string);
                 info!("{}", result_string);
 
+                {
+                    let mut lock = JUDGE_SERVER_INFOS.write().unwrap();
+                    let mut server_info = lock.get(&server_url).unwrap().clone();
+                    server_info.task_number -= 1;
+                    lock.insert(server_url, server_info);
+                }
+
                 if result_string == String::from("") {
                     let target = status::table.filter(status::id.eq(task_uuid));
                     diesel::update(target)
@@ -95,13 +102,6 @@ impl Handler<StartJudge> for JudgeManager {
                 }
 
                 let (op_result, op_score, op_err_reason) = get_judge_result(judge_type_string, result_string.clone());
-
-                {
-                    let mut lock = JUDGE_SERVER_INFOS.write().unwrap();
-                    let mut server_info = lock.get(&server_url).unwrap().clone();
-                    server_info.task_number -= 1;
-                    lock.insert(server_url, server_info);
-                }
 
                 // update status
                 let target = status::table.filter(status::id.eq(task_uuid));

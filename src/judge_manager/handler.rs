@@ -63,6 +63,11 @@ impl Handler<StartJudge> for JudgeManager {
                     .set((
                         status::state.eq("Pending".to_owned()),
                         status::start_pend_time.eq(Some(get_cur_naive_date_time())),
+                        status::host_name.eq({
+                            let lock = JUDGE_SERVER_INFOS.read().unwrap();
+                            let server_info = lock.get(&server_url).unwrap().clone();
+                            Some(server_info.hostname.clone())
+                        }),
                     ))
                     .execute(&self.0).expect("Error changing status's state to Pending.");
 
@@ -75,6 +80,7 @@ impl Handler<StartJudge> for JudgeManager {
                         .set((
                             status::state.eq("Waiting".to_owned()),
                             status::start_pend_time.eq(Some(get_cur_naive_date_time())),
+                            status::host_name.eq({ let tmp: Option<String> = None; tmp }),
                         ))
                     .execute(&self.0).expect("Error changing status's state to Pending.");
 

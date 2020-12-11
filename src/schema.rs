@@ -70,6 +70,7 @@ table! {
         start_pend_time -> Nullable<Timestamp>,
         finish_time -> Nullable<Timestamp>,
         language -> Text,
+        host_name -> Nullable<Text>,
     }
 }
 

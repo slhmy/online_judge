@@ -19,6 +19,7 @@ pub struct Status {
     pub start_pend_time: Option<NaiveDateTime>,
     pub finish_time: Option<NaiveDateTime>,
     pub language: String,
+    pub host_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Deserialize, Insertable, Queryable)]
@@ -35,6 +36,7 @@ pub struct InsertableStatus {
     pub start_pend_time: Option<NaiveDateTime>,
     pub finish_time: Option<NaiveDateTime>,
     pub language: String,
+    pub host_name: Option<String>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

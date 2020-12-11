@@ -54,6 +54,7 @@ impl Handler<SubmitStatusMessage> for DbExecutor {
                 start_pend_time: None,
                 finish_time: None,
                 language: msg.language,
+                host_name: None,
             })
             .execute(&self.0)
             .expect("Insert status failed");

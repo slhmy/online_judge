@@ -73,6 +73,8 @@ async fn main() -> Result<(), Error> {
     let stdin = io::stdin();
     let mut token = String::new();
     stdin.read_line(&mut token)?;
+    let mut url = String::new();
+    stdin.read_line(&mut url)?;
     let mut judge_setting_string = String::new();
     stdin.read_line(&mut judge_setting_string)?;
     let judge_setting: JudgeSetting = serde_json::from_str(&judge_setting_string.trim())?;
@@ -80,7 +82,7 @@ async fn main() -> Result<(), Error> {
 
     // Create request builder, configure request and send
     let mut response = Client::new()
-        .post("http://127.0.0.1:12358/judge")
+        .post(format!("{}/judge", url))
         .set_header("X-Judge-Server-Token", token.trim())
         .set_header("Content-Type", "application/json")
         .timeout(Duration::new(time_out, 0))

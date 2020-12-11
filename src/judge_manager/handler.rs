@@ -70,8 +70,9 @@ impl Handler<StartJudge> for JudgeManager {
                         }),
                     ))
                     .execute(&self.0).expect("Error changing status's state to Pending.");
-
-                let result_string = run_judge_client(server_token, setting_string);
+                
+                info!("sending request to {}", server_url);
+                let result_string = run_judge_client(server_token, server_url.clone(), setting_string);
                 info!("{}", result_string);
 
                 if result_string == String::from("") {

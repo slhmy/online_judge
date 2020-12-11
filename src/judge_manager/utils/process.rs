@@ -1,7 +1,7 @@
 use std::process::{Command, Stdio};
 use std::io::{BufRead, Write, BufReader};
 
-pub fn run_judge_client(token: String, judge_setting: String) -> String {
+pub fn run_judge_client(token: String, url: String, judge_setting: String) -> String {
     // 启动子进程
     let mut p = Command::new("./exe/send_judge_request")
         .stdin(Stdio::piped())  // 将子进程的标准输入重定向到管道
@@ -15,6 +15,9 @@ pub fn run_judge_client(token: String, judge_setting: String) -> String {
     
     p_stdin.write(token.as_bytes()).unwrap();
     p_stdin.write("\n".as_bytes()).unwrap();    // 发送\n，子进程的read_line才会响应
+
+    p_stdin.write(url.as_bytes()).unwrap();
+    p_stdin.write("\n".as_bytes()).unwrap();
 
     p_stdin.write(judge_setting.as_bytes()).unwrap();
     p_stdin.write("\n".as_bytes()).unwrap();

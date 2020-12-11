@@ -3,6 +3,7 @@ use crate::{
     errors::{ServiceError, ServiceResult},
     status::model::*,
     status::utils::mapper::*,
+    judge_server::model::*,
 };
 use diesel::prelude::*;
 use actix::prelude::*;
@@ -24,6 +25,7 @@ pub struct ProblemPreview {
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct DetailedStatus {
+    pub src: String,
     pub judge_result: Option<MappedJudgeResult>,
     pub err_result: Option<ErrResult>,
 }
@@ -50,6 +52,8 @@ impl Handler<GetStatusMessage> for DbExecutor {
 
             let mut judge_result: Option<JudgeResult> = None;
             let mut err_result: Option<ErrResult> = None;
+        
+        let judge_setting: JudgeSetting = serde_json::from_str(&status.setting_data).unwrap();
 
         if status.result_data.is_some() {
             let result_str = status.result_data.unwrap().clone();
@@ -62,6 +66,7 @@ impl Handler<GetStatusMessage> for DbExecutor {
         }
         
         Ok(DetailedStatus{
+            src: judge_setting.src,
             judge_result: if judge_result.is_none() { None } else {
                 let inner_result = judge_result.unwrap();
                 let mut final_output = MappedJudgeResult {

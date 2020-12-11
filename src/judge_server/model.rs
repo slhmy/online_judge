@@ -1,13 +1,13 @@
 use super::config::*;
 use std::time::SystemTime;
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct TestCase {
     pub input: String,
     pub output: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct JudgeSetting {
     pub language_config: LanguageConfig,
     pub src: String,

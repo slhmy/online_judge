@@ -1,4 +1,4 @@
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompileConfig {
     pub src_name: String, 
     pub exe_name: String,
@@ -8,7 +8,7 @@ pub struct CompileConfig {
     pub compile_command: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct RunConfig {
     pub command: String,
     pub seccomp_rule: Option<String>,
@@ -16,20 +16,20 @@ pub struct RunConfig {
     pub memory_limit_check_only: i32,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct LanguageConfig {
     pub compile: CompileConfig,
     pub run: RunConfig,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpjConfig {
     pub exe_name: String,
     pub command: String,
     pub seccomp_rule: String,
 }
 
-#[derive(Debug, Clone, Serialize)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SpjCompileConfig {
     pub src_name: String,
     pub exe_name: String,

@@ -38,13 +38,12 @@ pub async fn handle_heartbeat(
     if !info.service_url.is_none()
     {        
         let service_url = info.service_url.clone().unwrap();
-        let (mut is_deprecated, task_number) = 
-        {
+        let task_number = {
             let lock = JUDGE_SERVER_INFOS.read().unwrap();
-            if lock.get(&service_url).is_none() { (false, 0) } 
+            if lock.get(&service_url).is_none() { 0 } 
             else { 
                 let target = lock.get(&service_url).unwrap();
-                (target.is_deprecated, target.task_number)
+                target.task_number
             }
         };
 
@@ -55,12 +54,12 @@ pub async fn handle_heartbeat(
             .send()
             .await;
 
-        if !response.is_ok() {
-            is_deprecated = true;
-            info!("setting is_deprecated to true");
-        } else {
-            is_deprecated = false;
-        }
+        let is_deprecated = {
+            if !response.is_ok() {
+                info!("setting is_deprecated to true");
+                true
+            } else { false }
+        };
 
         let now = SystemTime::now();
         let judge_server_info = JudgeServerInfo {

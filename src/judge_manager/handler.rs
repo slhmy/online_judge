@@ -58,7 +58,20 @@ impl Handler<StartJudge> for JudgeManager {
                     .filter(status::id.eq(task_uuid))
                     .select((status::judge_type, status::setting_data))
                     .first::<(String, String)>(&self.0)
-                    .expect("Error loading setting_data from status.");
+                    .expect({
+                        {
+                            let mut lock = JUDGE_SERVER_INFOS.write().unwrap();
+                            let mut server_info = lock.get(&server_url).unwrap().clone();
+                            server_info.task_number -= 1;
+                            lock.insert(server_url.clone(), server_info);
+                        }
+                        {
+                            let mut lock = WAITING_QUEUE.write().unwrap();
+                            lock.push_front(task_uuid);
+                        }
+                        info!("pushed {} back to queue", task_uuid);
+                        "Error loading setting_data from status."
+                    });
 
                 let target = status::table.filter(status::id.eq(task_uuid));
                 diesel::update(target)
@@ -71,7 +84,20 @@ impl Handler<StartJudge> for JudgeManager {
                             Some(server_info.hostname.clone())
                         }),
                     ))
-                    .execute(&self.0).expect("Error changing status's state to Pending.");
+                    .execute(&self.0).expect({
+                        {
+                            let mut lock = JUDGE_SERVER_INFOS.write().unwrap();
+                            let mut server_info = lock.get(&server_url).unwrap().clone();
+                            server_info.task_number -= 1;
+                            lock.insert(server_url.clone(), server_info);
+                        }
+                        {
+                            let mut lock = WAITING_QUEUE.write().unwrap();
+                            lock.push_front(task_uuid);
+                        }
+                        info!("pushed {} back to queue", task_uuid);
+                        "Error changing status's state to Pending."
+                    });
                 
                 info!("sending request to {}", server_url);
                 let result_string = run_judge_client(server_token, server_url.clone(), setting_string);
@@ -92,7 +118,7 @@ impl Handler<StartJudge> for JudgeManager {
                             status::start_pend_time.eq(Some(get_cur_naive_date_time())),
                             status::host_name.eq({ let tmp: Option<String> = None; tmp }),
                         ))
-                    .execute(&self.0).expect("Error changing status's state to Pending.");
+                    .execute(&self.0).expect("Error changing status's state to Waiting.");
 
                     {
                         let mut lock = WAITING_QUEUE.write().unwrap();

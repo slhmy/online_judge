@@ -9,6 +9,7 @@ use crate::judge_server::model::JudgeServerInfo;
 use std::time::SystemTime;
 use crate::judge_manager::*;
 use crate::judge_manager::handler::StartJudge;
+use actix_web::client::Client;
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct HeartbeatResquest {
@@ -37,7 +38,7 @@ pub async fn handle_heartbeat(
     if !info.service_url.is_none()
     {        
         let service_url = info.service_url.clone().unwrap();
-        let (is_deprecated, task_number) = 
+        let (mut is_deprecated, task_number) = 
         {
             let lock = JUDGE_SERVER_INFOS.read().unwrap();
             if lock.get(&service_url).is_none() { (false, 0) } 
@@ -46,6 +47,18 @@ pub async fn handle_heartbeat(
                 (target.is_deprecated, target.task_number)
             }
         };
+
+        let response = Client::new()
+            .post(format!("{}/ping", service_url))
+            .set_header("X-Judge-Server-Token", token.clone())
+            .set_header("Content-Type", "application/json")
+            .send()
+            .await;
+        
+        if !response.is_ok() {
+            is_deprecated = true;
+        }
+
         let now = SystemTime::now();
         let judge_server_info = JudgeServerInfo {
             judger_version: info.judger_version.clone(),

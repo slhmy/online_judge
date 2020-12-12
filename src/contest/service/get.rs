@@ -4,6 +4,7 @@ use crate::{
     contest::service::catalog::ContestCatalogElement,
     contest::model::{ Contest },
     utils::time::get_cur_naive_date_time,
+    region::model::*,
 };
 use diesel::prelude::*;
 use actix::prelude::*;
@@ -33,6 +34,7 @@ impl Handler<GetContestMessage> for DbExecutor {
         use crate::schema::contests::dsl::*;
         use crate::schema::contests;
         use crate::schema::contest_register_lists;
+        use crate::schema::regions;
         use diesel::dsl::*;
 
         let result = contests.filter(region.eq(&msg.region))
@@ -66,7 +68,7 @@ impl Handler<GetContestMessage> for DbExecutor {
                     state: if supposed_state == contest.state { contest.state }
                         else {
                             let target = contests::table
-                                .filter(contests::region.eq(contest.region));
+                                .filter(contests::region.eq(contest.region.clone()));
                             diesel::update(target)
                                 .set(contests::state.eq(supposed_state.clone()))
                                 .execute(&self.0).expect("Error changing status's state to Pending.");
@@ -77,6 +79,12 @@ impl Handler<GetContestMessage> for DbExecutor {
                     seal_before_end: contest.seal_before_end,
                     register_end_time: contest.register_end_time,
                     is_registered: is_registered,
+                    need_pass: {
+                        let cur_region = regions::table
+                            .filter(regions::name.eq(contest.region))
+                            .first::<Region>(&self.0).expect("Error getting region");
+                        cur_region.need_pass
+                    }
                 }) 
             }
         }

@@ -52,4 +52,5 @@ pub struct RegisterInfo {
     pub contest_region: String,
     pub user_id: i32,
     pub is_unrated: bool,
+    pub register_after_end: bool
 }

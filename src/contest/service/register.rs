@@ -5,6 +5,8 @@ use crate::{
     errors::{ ServiceError, ServiceResult },
     region::model::Region,
     utils::encryption::encode::make_hash,
+    utils::time::get_cur_naive_date_time,
+    contest::model::*,
 };
 use diesel::prelude::*;
 use actix::prelude::*;
@@ -18,6 +20,7 @@ struct InsertableRegisterInfo {
     contest_region: String,
     user_id: i32,
     is_unrated: bool,
+    register_after_end: bool,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -45,6 +48,7 @@ impl Handler<NewRegisterInfoMessage> for DbExecutor {
     fn handle(&mut self, msg: NewRegisterInfoMessage, _: &mut Self::Context) -> Self::Result {
         use crate::schema::contest_register_lists::dsl::contest_register_lists;
         use crate::schema::regions::dsl::*;
+        use crate::schema::contests;
 
         let result = regions
             .filter(name.eq(msg.contest_region.clone()))
@@ -65,9 +69,17 @@ impl Handler<NewRegisterInfoMessage> for DbExecutor {
                 if premission {
                     let result = diesel::insert_into(contest_register_lists)
                         .values(&InsertableRegisterInfo{
-                            contest_region: msg.contest_region,
+                            contest_region: msg.contest_region.clone(),
                             user_id: msg.user_id,
                             is_unrated: msg.is_unrated,
+                            register_after_end: {
+                                let cur_time = get_cur_naive_date_time();
+                                let cur_contest = contests::table
+                                    .filter(contests::region.eq(msg.contest_region))
+                                    .first::<Contest>(&self.0)
+                                    .expect("Error while getting contest");
+                                if cur_time > cur_contest.end_time { true } else { false }
+                            }
                         })
                         .get_result::<RegisterInfo>(&self.0);
 

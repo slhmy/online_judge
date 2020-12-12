@@ -3,6 +3,7 @@ table! {
         contest_region -> Text,
         user_id -> Int4,
         is_unrated -> Bool,
+        register_after_end -> Bool,
     }
 }
 

@@ -69,6 +69,7 @@ impl Handler<GetACMRankMessage> for DbExecutor {
         // get contesters
         let contesters = contest_register_lists::table
             .filter(contest_register_lists::contest_region.eq(msg.region.clone()))
+            .filter(contest_register_lists::register_after_end.eq(false))
             .inner_join(users::table.on(contest_register_lists::user_id.eq(users::id)))
             .select((users::id, users::username, contest_register_lists::is_unrated))
             .load::<(i32, String, bool)>(&self.0)

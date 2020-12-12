@@ -2,6 +2,7 @@ use crate::{
     database::*,
     errors::{ServiceError, ServiceResult},
     contest::model::*,
+    utils::time::get_cur_naive_date_time,
 };
 use diesel::prelude::*;
 use actix::prelude::*;
@@ -51,6 +52,7 @@ impl Handler<GetContestCatalogMessage> for DbExecutor {
     
     fn handle(&mut self, msg: GetContestCatalogMessage, _: &mut Self::Context) -> Self::Result {
         use crate::schema::contests::dsl::*;
+        use crate::schema::contests;
         use crate::schema::contest_register_lists;
         use diesel::dsl::*;
 
@@ -92,11 +94,28 @@ impl Handler<GetContestCatalogMessage> for DbExecutor {
                 }
             } else { false };
 
+            let cur_time = get_cur_naive_date_time();
+            let supposed_state = {
+                if cur_time < contest.start_time { String::from("Preparing") }
+                else if cur_time > contest.end_time { String::from("Ended") }
+                else { String::from("Running") }
+            };
+
             catalog.elements[current_page_number as usize].push(
                 ContestCatalogElement {
-                    region: contest.region,
+                    region: contest.region.clone(),
                     name: contest.name,
-                    state: contest.state,
+                    state: {
+                        if supposed_state == contest.state { contest.state }
+                        else {
+                            let target = contests::table
+                                .filter(contests::region.eq(contest.region));
+                            diesel::update(target)
+                                .set(contests::state.eq(supposed_state.clone()))
+                                .execute(&self.0).expect("Error changing status's state to Pending.");
+                            supposed_state
+                        }
+                    },
                     start_time: contest.start_time,
                     end_time: contest.end_time,
                     seal_before_end: contest.seal_before_end,

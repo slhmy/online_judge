@@ -3,6 +3,7 @@ use crate::{
     errors::{ServiceError, ServiceResult},
     contest::service::catalog::ContestCatalogElement,
     contest::model::{ Contest },
+    utils::time::get_cur_naive_date_time,
 };
 use diesel::prelude::*;
 use actix::prelude::*;
@@ -30,6 +31,7 @@ impl Handler<GetContestMessage> for DbExecutor {
 
     fn handle(&mut self, msg: GetContestMessage, _: &mut Self::Context) -> Self::Result {
         use crate::schema::contests::dsl::*;
+        use crate::schema::contests;
         use crate::schema::contest_register_lists;
         use diesel::dsl::*;
 
@@ -37,8 +39,16 @@ impl Handler<GetContestMessage> for DbExecutor {
             .first::<Contest>(&self.0);
 
         match result {
-            Err(_) => { Err("Error while creating new contest.".to_owned()) },
+            Err(_) => { Err("Error while getting contest.".to_owned()) },
             Ok(contest) => {
+
+                let cur_time = get_cur_naive_date_time();
+                let supposed_state = {
+                    if cur_time < contest.start_time { String::from("Preparing") }
+                    else if cur_time > contest.end_time { String::from("Ended") }
+                    else { String::from("Running") }
+                };
+
                 let is_registered = if msg.user_id.is_some() {
                     match contest_register_lists::table
                         .filter(contest_register_lists::user_id.eq(msg.user_id.unwrap()))
@@ -49,10 +59,19 @@ impl Handler<GetContestMessage> for DbExecutor {
                         Ok(count) => { if count >= 1 { true } else { false } },
                     }
                 } else { false };
+
                 Ok(ContestCatalogElement{
-                    region: contest.region,
+                    region: contest.region.clone(),
                     name: contest.name,
-                    state: contest.state,
+                    state: if supposed_state == contest.state { contest.state }
+                        else {
+                            let target = contests::table
+                                .filter(contests::region.eq(contest.region));
+                            diesel::update(target)
+                                .set(contests::state.eq(supposed_state.clone()))
+                                .execute(&self.0).expect("Error changing status's state to Pending.");
+                            supposed_state
+                        },
                     start_time: contest.start_time,
                     end_time: contest.end_time,
                     seal_before_end: contest.seal_before_end,

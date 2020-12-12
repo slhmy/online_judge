@@ -25,6 +25,7 @@ pub struct ProblemPreview {
 
 #[derive(Debug, Clone, Serialize, juniper::GraphQLObject)]
 pub struct DetailedStatus {
+    pub language: String,
     pub src: String,
     pub judge_result: Option<MappedJudgeResult>,
     pub err_result: Option<ErrResult>,
@@ -66,6 +67,7 @@ impl Handler<GetStatusMessage> for DbExecutor {
         }
         
         Ok(DetailedStatus{
+            language: status.language,
             src: judge_setting.src,
             judge_result: if judge_result.is_none() { None } else {
                 let inner_result = judge_result.unwrap();

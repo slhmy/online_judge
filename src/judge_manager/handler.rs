@@ -128,7 +128,7 @@ impl Handler<StartJudge> for JudgeManager {
                 diesel::update(target)
                     .set((
                         problems::submit_times.eq(problems::submit_times + if op_result.clone().is_some() {
-                            if op_result.clone().unwrap() == "Unaccepted".to_owned() { 1 } else { 0 }
+                            if op_result.clone().unwrap() == "Unaccepted".to_owned() || op_result.clone().unwrap() == "Accepted".to_owned() { 1 } else { 0 }
                         } else { 0 }),
                         problems::accept_times.eq(problems::accept_times + if op_result.clone().is_some() { 
                             if op_result.unwrap() == "Accepted".to_owned() { 1 } else { 0 }

@@ -15,5 +15,6 @@ pub fn route(cfg: &mut web::ServiceConfig) {
             .service(web::resource("/register").route(web::post().to(register)))
             .service(web::resource("/get_catalog").route(web::post().to(get_contest_catalog)))
             .service(web::resource("/get_acm_rank").route(web::post().to(get_acm_rank)))
+            .service(web::resource("/unregister").route(web::post().to(unregister)))
     );
 }

@@ -8,6 +8,7 @@ use crate::{
         delete::{ delete_contest_service, DeleteContestMessage },
         catalog::{ get_contest_catalog_service, GetContestCatalogForm },
         get::{ get_contest_service, GetContestForm },
+        unregister::{ unregister_service, UnregisterForm },
     },
     errors::ServiceError,
 };
@@ -102,6 +103,19 @@ pub async fn register(
         form.contest_region.clone(),
         form.is_unrated,
         form.password.clone(),
+        id,
+    ).await
+    .map(|res| HttpResponse::Ok().json(&res))
+}
+
+pub async fn unregister(
+    data: web::Data<DBState>, 
+    form: web::Form<UnregisterForm>,
+    id: Identity,
+) -> Result<HttpResponse, ServiceError> {
+    unregister_service(
+        data,
+        form.to_owned(),
         id,
     ).await
     .map(|res| HttpResponse::Ok().json(&res))

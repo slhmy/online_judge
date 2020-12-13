@@ -9,6 +9,7 @@ use crate::contest::{
         new::{ new_contest_service, NewContestMessage },
         delete:: { delete_contest_service, DeleteContestMessage },
         register::register_service,
+        unregister::{ unregister_service, UnregisterForm },
     },
     model::{ OutContest, RegisterInfo },
 };
@@ -108,6 +109,17 @@ impl MutationRoot {
             contest_region,
             is_unrated,
             password,
+            context.id.clone(),
+        ))
+    }
+
+    fn unregister_contest(
+        context: &Context,
+        region: String,
+    ) -> ServiceResult<DeleteResult> {
+        executor::block_on(unregister_service(
+            context.db.clone(),
+            UnregisterForm{ region },
             context.id.clone(),
         ))
     }

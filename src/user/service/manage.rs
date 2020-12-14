@@ -178,13 +178,13 @@ pub async fn change_info(
             },
         }
 
-        if user.role == "admin".to_owned() || user.id == form.id {
+        if user.role == "admin".to_owned() || (user.id == form.id && form.role.is_none()) {
             res = data.db.send(form.into_inner()).await;
         } else {
             return HttpResponse::BadRequest().json(
                 OperationResult {
                     result_en: Some("rejected".to_owned()),
-                    msg_en: Some("You are not allowed to change other user's information.".to_owned()),
+                    msg_en: Some("You are not allowed to change other user's information or change your role.".to_owned()),
                     result_cn: None,
                     msg_cn: None,
                 });

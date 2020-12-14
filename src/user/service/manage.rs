@@ -56,11 +56,11 @@ fn get_user_change(req: UserChangeRequest, user: User) -> UserChange {
 
     UserChange {
         username: username,
-        hash: hash,
         email: email,
         mobile: mobile,
         role: role,
         job_number: job_number,
+        hash: hash,
     }
 }
 

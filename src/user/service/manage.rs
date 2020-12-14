@@ -19,21 +19,21 @@ use crate::schema::users;
 #[table_name="users"]
 pub struct UserChange {
     pub username: Option<String>,
-    pub hash: Option<Vec<u8>>,
     pub email: Option<String>,
     pub mobile: Option<String>,
     pub role: Option<String>,
     pub job_number: Option<String>,
+    pub hash: Vec<u8>,
 }
 
 fn get_user_change(req: UserChangeRequest, user: User) -> UserChange {
     let username = if req.username.is_none() { None }
     else { Some(req.username.unwrap()) };
 
-    let hash = if req.password.is_none() { None }
+    let hash = if req.password.is_none() { user.hash }
     else {
-        if req.password.clone().unwrap().is_password() { Some(make_hash(&req.password.unwrap(), &user.salt).to_vec()) }
-        else { None }
+        if req.password.clone().unwrap().is_password() { make_hash(&req.password.unwrap(), &user.salt).to_vec() }
+        else { user.hash }
     };
 
     let email = if req.email.is_none() { None }

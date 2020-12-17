@@ -119,8 +119,6 @@ pub fn make_normal_info(name: String, zip_buf: &[u8]) -> i32 {
     } else {
         if is_backuped { // remove backup
             fs::remove_dir_all(&backup_path).unwrap();
-        } else { // remove failed directory
-            fs::remove_dir_all(&path).unwrap();
         }
     }
 
@@ -203,8 +201,6 @@ pub fn make_spj_info(name: String, zip_buf: &[u8]) -> i32 {
     } else {
         if is_backuped { // remove backup
             fs::remove_dir_all(&backup_path).unwrap();
-        } else { // remove failed directory
-            fs::remove_dir_all(&path).unwrap();
         }
     }
 

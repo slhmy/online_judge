@@ -16,7 +16,7 @@ pub struct DBState {
 pub fn create_db_executor() -> Addr<DbExecutor> {
     let database_url = (*DATABASE_URL).clone();
 
-    SyncArbiter::start(3, move || {
+    SyncArbiter::start(4, move || {
         DbExecutor(PgConnection::establish(&database_url).unwrap())
     })
 }
